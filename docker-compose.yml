@@ -1,0 +1,60 @@
+version: "3.8"
+
+services:
+  frontend:
+    build: ./frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - front-network
+
+  backend:
+    build: ./backend
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_HOST=database
+      - DATABASE_PORT=3306
+      - DATABASE_NAME=pixelStore_db
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=root
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s http://localhost:8000/ || true" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - back-network
+      - front-network
+
+  database:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pixelStore_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - back-network
+
+volumes:
+  db-data:
+
+networks:
+  front-network:
+    driver: bridge
+  back-network:
+    driver: bridge
