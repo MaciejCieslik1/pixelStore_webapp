@@ -8,7 +8,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON pixelStore_database.* TO 'student'@'%';
 
 
 CREATE TABLE notification (
-        notification_id         INT UNSIGNED AUTO_INCREMENT PRIMRY_KEY,
+        notification_id         INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         sender_id               INT UNSIGNED NOT NULL,
         receiver_id             INT UNSIGNED NOT NULL,
         sent_date_time          DATETIME NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE user_preferences (
 
 CREATE TABLE category (
         category_id             INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
-        name                    VARCHAR(32) NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        name                    VARCHAR(32) NOT NULL UNIQUE,
         description             VARCHAR(1024) NOT NULL
 );
 
@@ -98,7 +98,7 @@ CREATE TABLE product (
         owner_id                INT UNSIGNED NOT NULL,
         name                    VARCHAR(64) NOT NULL,
         price                   DECIMAL(8, 2) NOT NULL,
-        amount                  INT NOT NULL,
+        amount                  INT UNSIGNED NOT NULL,
         color                   VARCHAR(32) NOT NULL,
         weight                  DECIMAL(4, 2) NOT NULL,
         length                  DECIMAL(5, 2) NOT NULL,
@@ -126,8 +126,8 @@ CREATE TABLE order_return (
         order_return_id         INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         ordered_product_id      INT UNSIGNED NOT NULL,
         description             VARCHAR(1024) NOT NULL,
-        return_date_time        DATETIME UNSIGNED NOT NULL,
-        is_accepted             BOOLEAN UNSIGNED NOT NULL
+        return_date_time        DATETIME NOT NULL,
+        is_accepted             BOOLEAN NOT NULL
 );
 
 
@@ -135,7 +135,7 @@ ALTER TABLE notification ADD CONSTRAINT notification_sender_id_fk FOREIGN KEY(se
 ALTER TABLE notification ADD CONSTRAINT notification_receiver_id_fk FOREIGN KEY(receiver_id) REFERENCES user(user_id);
 
 ALTER TABLE contact ADD CONSTRAINT contact_sender_id_fk FOREIGN KEY(sender_id) REFERENCES user(user_id);
-ALTER TABLE contact ADD CONSTRAINT contact_receiver_id_fk FOREIGN KEY(receive_id) REFERENCES user(user_id);
+ALTER TABLE contact ADD CONSTRAINT contact_receiver_id_fk FOREIGN KEY(receiver_id) REFERENCES user(user_id);
 
 ALTER TABLE verification_code ADD CONSTRAINT verification_code_user_id_fk FOREIGN KEY(user_id) REFERENCES user(user_id);
 
@@ -188,7 +188,7 @@ CREATE INDEX category_product_category_id_idx ON category_product(category_id);
 CREATE INDEX category_product_product_id_idx ON category_product(product_id);
 
 CREATE INDEX transaction_buyer_id_idx ON transaction(buyer_id);
-CREATE INDEX transaction_date_time_idx ON transation(date_time);
+CREATE INDEX transaction_date_time_idx ON transaction(date_time);
 
 CREATE INDEX product_review_product_id_idx ON product_review(product_id);
 CREATE INDEX product_review_reviewer_id_idx ON product_review(reviewer_id);
@@ -196,9 +196,9 @@ CREATE INDEX product_review_reviewer_id_idx ON product_review(reviewer_id);
 CREATE INDEX product_owner_id_idx ON product(owner_id);
 CREATE INDEX product_name_idx ON product(name);
 
-CREATE INDEX order_product_transaction_id_idx ON product(transaction_id);
-CREATE INDEX order_product_product_id_idx ON product(product_id);
-CREATE INDEX order_seller_id_idx ON product(seller_id);
+CREATE INDEX order_product_transaction_id_idx ON order_product(transaction_id);
+CREATE INDEX order_product_product_id_idx ON order_product(product_id);
+CREATE INDEX order_seller_id_idx ON order_product(seller_id);
 
 CREATE INDEX product_photo_product_id_idx ON product_photo(product_id);
 
