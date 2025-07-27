@@ -166,3 +166,41 @@ ALTER TABLE product_photo ADD CONSTRAINT product_photo_product_id_fk FOREIGN KEY
 
 ALTER TABLE order_return ADD CONSTRAINT order_return_ordered_product_id_fk FOREIGN KEY(ordered_product_id) REFERENCES
     product(product_id);
+
+
+CREATE INDEX notification_sender_id_idx ON notification(sender_id);
+CREATE INDEX notification_receiver_id_idx ON notification(receiver_id);
+
+CREATE INDEX contact_sender_id_idx ON contact(sender_id);
+CREATE INDEX contact_receiver_id_idx ON contact(receiver_id);
+
+CREATE INDEX verification_code_user_id_idx ON verification_code(user_id);
+
+CREATE INDEX user_preferences_user_id_idx ON user_preferences(user_id);
+
+CREATE INDEX category_name_idx ON category(name);
+
+CREATE INDEX address_user_id_idx ON address(user_id);
+
+CREATE INDEX user_statistics_user_id_idx ON user_statistics(user_id);
+
+CREATE INDEX category_product_category_id_idx ON category_product(category_id);
+CREATE INDEX category_product_product_id_idx ON category_product(product_id);
+
+CREATE INDEX transaction_buyer_id_idx ON transaction(buyer_id);
+CREATE INDEX transaction_date_time_idx ON transation(date_time);
+
+CREATE INDEX product_review_product_id_idx ON product_review(product_id);
+CREATE INDEX product_review_reviewer_id_idx ON product_review(reviewer_id);
+
+CREATE INDEX product_owner_id_idx ON product(owner_id);
+CREATE INDEX product_name_idx ON product(name);
+
+CREATE INDEX order_product_transaction_id_idx ON product(transaction_id);
+CREATE INDEX order_product_product_id_idx ON product(product_id);
+CREATE INDEX order_seller_id_idx ON product(seller_id);
+
+CREATE INDEX product_photo_product_id_idx ON product_photo(product_id);
+
+CREATE INDEX order_return_ordered_product_id_idx ON order_return(ordered_product_id);
+CREATE INDEX order_return_return_date_time_idx ON order_return(return_date_time);
