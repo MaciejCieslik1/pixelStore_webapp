@@ -8,16 +8,16 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON pixelStore_database.* TO 'student'@'%';
 
 
 CREATE TABLE notification (
-        notification_id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMRY_KEY,
+        notification_id         INT UNSIGNED AUTO_INCREMENT PRIMRY_KEY,
         sender_id               INT UNSIGNED NOT NULL,
         receiver_id             INT UNSIGNED NOT NULL,
-        date_time               DATETIME NOT NULL,
+        sent_date_time          DATETIME NOT NULL,
         text                    VARCHAR(255) NOT NULL,
         is_read                 BOOLEAN NOT NULL
 );
 
 CREATE TABLE user (
-        user_id                 INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        user_id                 INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         email                   VARCHAR(64) NOT NULL UNIQUE,
         username                VARCHAR(32) NOT NULL UNIQUE,
         password_hash           VARCHAR(96) NOT NULL,
@@ -27,13 +27,13 @@ CREATE TABLE user (
 );
 
 CREATE TABLE contact (
-        contact_id              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        contact_id              INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         sender_id               INT UNSIGNED NOT NULL,
         receiver_id             INT UNSIGNED NOT NULL
 );
 
 CREATE TABLE verification_code (
-        verification_id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        verification_id         INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         user_id                 INT UNSIGNED NOT NULL,
         code                    VARCHAR(10) NOT NULL,
         expiration_date_time    DATETIME NOT NULL,
@@ -41,20 +41,20 @@ CREATE TABLE verification_code (
 );
 
 CREATE TABLE user_preferences (
-        user_preferences_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        user_preferences_id     INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         user_id                 INT UNSIGNED NOT NULL,
         language                VARCHAR(32) NOT NULL,
         dark_mode               BOOLEAN NOT NULL
 );
 
 CREATE TABLE category (
-        category_id             INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        category_id             INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         name                    VARCHAR(32) NOT NULL AUTO_INCREMENT PRIMARY_KEY,
         description             VARCHAR(1024) NOT NULL
 );
 
 CREATE TABLE address (
-        address_id              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        address_id              INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         user_id                 INT UNSIGNED NOT NULL,
         address                 VARCHAR(64) NOT NULL,
         postal_code             VARCHAR(5) NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE address (
 );
 
 CREATE TABLE user_statistics (
-        user_statistics_id      INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        user_statistics_id      INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         user_id                 INT UNSIGNED NOT NULL,
         creation_date           DATE NOT NULL,
         products_bought         INT UNSIGNED NOT NULL,
@@ -71,13 +71,13 @@ CREATE TABLE user_statistics (
 );
 
 CREATE TABLE category_product (
-        category_product_id     INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        category_product_id     INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         category_id             INT UNSIGNED NOT NULL,
         product_id              INT UNSIGNED NOT NULL
 );
 
 CREATE TABLE transaction (
-        transaction_id          INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        transaction_id          INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         buyer_id                INT UNSIGNED NOT NULL,
         total_price             DECIMAL(8, 2) NOT NULL,
         date_time               DATETIME NOT NULL,
@@ -85,7 +85,7 @@ CREATE TABLE transaction (
 );
 
 CREATE TABLE product_review (
-        product_review_id       INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        product_review_id       INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         product_id              INT UNSIGNED NOT NULL,
         rating                  DECIMAL(2, 1) NOT NULL,
         description             VARCHAR(1024) NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE product_review (
 );
 
 CREATE TABLE product (
-        product_id              INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        product_id              INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         owner_id                INT UNSIGNED NOT NULL,
         name                    VARCHAR(64) NOT NULL,
         price                   DECIMAL(8, 2) NOT NULL,
@@ -108,7 +108,7 @@ CREATE TABLE product (
 );
 
 CREATE TABLE order_item (
-        order_item_id           INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        order_item_id           INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         transaction_id          INT UNSIGNED NOT NULL,
         product_id              INT UNSIGNED NOT NULL,
         seller_id               INT UNSIGNED NOT NULL,
@@ -116,14 +116,14 @@ CREATE TABLE order_item (
 );
 
 CREATE TABLE product_photo (
-        product_photo_id        INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        product_photo_id        INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         product_id              INT UNSIGNED NOT NULL,
         image_url               VARCHAR(2048) NOT NULL,
         is_main_photo           BOOLEAN NOT NULL
 )
 
 CREATE TABLE order_return (
-        order_return_id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY_KEY,
+        order_return_id         INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         ordered_product_id      INT UNSIGNED NOT NULL,
         description             VARCHAR(1024) NOT NULL,
         return_date_time        DATETIME UNSIGNED NOT NULL,
