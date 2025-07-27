@@ -129,3 +129,39 @@ CREATE TABLE order_return (
         return_date_time        DATETIME UNSIGNED NOT NULL,
         is_accepted             BOOLEAN UNSIGNED NOT NULL
 );
+
+
+ALTER TABLE notification ADD CONSTRAINT notification_sender_id_fk FOREIGN KEY(sender_id) REFERENCES user(user_id);
+ALTER TABLE notification ADD CONSTRAINT notification_receiver_id_fk FOREIGN KEY(receiver_id) REFERENCES user(user_id);
+
+ALTER TABLE contact ADD CONSTRAINT contact_sender_id_fk FOREIGN KEY(sender_id) REFERENCES user(user_id);
+ALTER TABLE contact ADD CONSTRAINT contact_receiver_id_fk FOREIGN KEY(receive_id) REFERENCES user(user_id);
+
+ALTER TABLE verification_code ADD CONSTRAINT verification_code_user_id_fk FOREIGN KEY(user_id) REFERENCES user(user_id);
+
+ALTER TABLE user_preferences ADD CONSTRAINT user_preferences_user_id_fk FOREIGN KEY(user_id) REFERENCES user(user_id);
+
+ALTER TABLE address ADD CONSTRAINT address_user_id_fk FOREIGN KEY(user_id) REFERENCES user(user_id);
+
+ALTER TABLE user_statistics ADD CONSTRAINT user_statistics_user_id_fk FOREIGN KEY(user_id) REFERENCES user(user_id);
+
+ALTER TABLE category_product ADD CONSTRAINT category_product_category_id_fk FOREIGN KEY(category_id) REFERENCES
+    category(category_id);
+ALTER TABLE category_product ADD CONSTRAINT category_product_product_id_fk FOREIGN KEY(product_id) REFERENCES
+    product(product_id);
+
+ALTER TABLE transaction ADD CONSTRAINT transaction_buyer_id_fk FOREIGN KEY(buyer_id) REFERENCES user(user_id);
+
+ALTER TABLE product_review ADD CONSTRAINT product_review_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
+
+ALTER TABLE product ADD CONSTRAINT product_owner_id_fk FOREIGN KEY(owner_id) REFERENCES user(user_id);
+
+ALTER TABLE order_item ADD CONSTRAINT order_item_transaction_id_fk FOREIGN KEY(transaction_id) REFERENCES
+    transaction(transaction_id);
+ALTER TABLE order_item ADD CONSTRAINT order_item_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
+ALTER TABLE order_item ADD CONSTRAINT order_item_seller_id_fk FOREIGN KEY(seller_id) REFERENCES user(user_id);
+
+ALTER TABLE product_photo ADD CONSTRAINT product_photo_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
+
+ALTER TABLE order_return ADD CONSTRAINT order_return_ordered_product_id_fk FOREIGN KEY(ordered_product_id) REFERENCES
+    product(product_id);
