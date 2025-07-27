@@ -107,8 +107,8 @@ CREATE TABLE product (
         guarantee_period        DECIMAL(2, 1) NOT NULL
 );
 
-CREATE TABLE order_item (
-        order_item_id           INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
+CREATE TABLE order_product (
+        order_product_id        INT UNSIGNED AUTO_INCREMENT PRIMARY_KEY,
         transaction_id          INT UNSIGNED NOT NULL,
         product_id              INT UNSIGNED NOT NULL,
         seller_id               INT UNSIGNED NOT NULL,
@@ -153,13 +153,14 @@ ALTER TABLE category_product ADD CONSTRAINT category_product_product_id_fk FOREI
 ALTER TABLE transaction ADD CONSTRAINT transaction_buyer_id_fk FOREIGN KEY(buyer_id) REFERENCES user(user_id);
 
 ALTER TABLE product_review ADD CONSTRAINT product_review_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
+ALTER TABLE product_review ADD CONSTRAINT product_review_reviewer_id_fk FOREIGN KEY(reviewer_id) REFERENCES user(user_id);
 
 ALTER TABLE product ADD CONSTRAINT product_owner_id_fk FOREIGN KEY(owner_id) REFERENCES user(user_id);
 
-ALTER TABLE order_item ADD CONSTRAINT order_item_transaction_id_fk FOREIGN KEY(transaction_id) REFERENCES
+ALTER TABLE order_product ADD CONSTRAINT order_item_transaction_id_fk FOREIGN KEY(transaction_id) REFERENCES
     transaction(transaction_id);
-ALTER TABLE order_item ADD CONSTRAINT order_item_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
-ALTER TABLE order_item ADD CONSTRAINT order_item_seller_id_fk FOREIGN KEY(seller_id) REFERENCES user(user_id);
+ALTER TABLE order_product ADD CONSTRAINT order_product_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
+ALTER TABLE order_product ADD CONSTRAINT order_product_seller_id_fk FOREIGN KEY(seller_id) REFERENCES user(user_id);
 
 ALTER TABLE product_photo ADD CONSTRAINT product_photo_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
 
