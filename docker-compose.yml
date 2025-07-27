@@ -21,9 +21,9 @@ services:
     environment:
       - DATABASE_HOST=database
       - DATABASE_PORT=3306
-      - DATABASE_NAME=pixelStore_db
-      - DATABASE_USER=root
-      - DATABASE_PASSWORD=root
+      - DATABASE_NAME=pixelStore_database
+      - DATABASE_USER=student
+      - DATABASE_PASSWORD=student
     healthcheck:
       test: [ "CMD-SHELL", "curl -s http://localhost:8000/ || true" ]
       interval: 10s
@@ -36,15 +36,15 @@ services:
   database:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: pixelStore_db
+      MYSQL_ROOT_PASSWORD: student
+      MYSQL_DATABASE: pixelStore_database
     ports:
       - "3306:3306"
     volumes:
       - db-data:/var/lib/mysql
       - ./database:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ustudent", "-pstudent"]
       interval: 10s
       timeout: 5s
       retries: 5
