@@ -99,6 +99,7 @@ CREATE TABLE product (
         product_id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         owner_id                INT UNSIGNED NOT NULL,
         name                    VARCHAR(64) NOT NULL,
+        description             VARCHAR(1024) NOT NULL,
         price                   DECIMAL(8, 2) NOT NULL,
         amount                  INT UNSIGNED NOT NULL,
         color                   VARCHAR(32) NOT NULL,
