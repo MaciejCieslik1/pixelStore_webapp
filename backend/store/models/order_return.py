@@ -10,6 +10,7 @@ class OrderReturn(models.Model):
 
     class Meta:
         db_table = 'order_return'
+        indexes = [models.Index(fields=['return_date_time'])]
 
     def __str__(self):
         return "description: " + str(self.description)

@@ -10,6 +10,7 @@ class Notification(models.Model):
 
     class Meta:
         db_table = 'notification'
+        indexes = [models.Index(fields=['sent_date_time'])]
 
     def __str__(self):
         return "Notification text: " + self.text

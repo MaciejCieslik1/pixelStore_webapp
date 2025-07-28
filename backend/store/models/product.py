@@ -25,6 +25,7 @@ class Product(models.Model):
 
     class Meta:
         db_table = 'product'
+        indexes = [models.Index(fields=['name'])]
 
     def __str__(self):
         return "Name: " + str(self)

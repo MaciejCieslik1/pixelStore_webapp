@@ -10,6 +10,7 @@ class Transaction(models.Model):
 
     class Meta:
         db_table = 'transaction'
+        indexes = [models.Index(fields=['date_time'])]
 
     def __str__(self):
         return "Total price: " + str(self.total_price)
