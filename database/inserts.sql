@@ -3,17 +3,17 @@ INSERT INTO user (email, username, password_hash, is_verified, bio, money) VALUE
      'I am an exemplary salesman', 1000000);
 
 
-INSERT INTO product (owner_id, name, description, price, amount, color, weight, length, width, height, guarantee_period) VALUES
+INSERT INTO product (owner_id, name, description, price, amount, color, weight, length, width, height, guarantee_period, status) VALUES
     (1, 'intel core I7 14700K', 'powerful gaming cpu', 1500, 3, 'silver', 0.05, 5, 8,
-     0.5, 5.0),
+     0.5, 5.0, 'available'),
     (1, 'ATX gaming motherboard Z790', 'atx motherboard for gamers', 1000, 3, 'silver', 0.05, 50, 35,
-     0.05, 5.0),
+     0.05, 5.0, 'available'),
     (1, 'nvidia geforce rtx 4060', 'powerful gaming gpu', 2500, 2, 'black', 1.25, 30, 10,
-     7, 3.0),
+     7, 3.0, 'available'),
     (1, 'SSD NVME 1TB ', 'large and fast disk', 500, 10, 'black', 0.1, 10, 3,
-     0.1, 4.0),
+     0.1, 4.0, 'available'),
     (1, 'power supply unit 750W Plus gold', 'safe and quit PSU', 800, 2, 'grey', 2.5, 0.25, 15,
-     10, 9.0);
+     10, 9.0, 'available');
 
 
 INSERT INTO category (name, description) VALUES

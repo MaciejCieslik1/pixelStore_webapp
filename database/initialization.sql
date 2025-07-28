@@ -45,7 +45,6 @@ CREATE TABLE verification_code (
 CREATE TABLE user_preferences (
         user_preferences_id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id                 INT UNSIGNED NOT NULL,
-        language                VARCHAR(32) NOT NULL,
         dark_mode               BOOLEAN NOT NULL
 );
 
@@ -107,7 +106,8 @@ CREATE TABLE product (
         length                  DECIMAL(5, 2) NOT NULL,
         width                   DECIMAL(5, 2) NOT NULL,
         height                  DECIMAL(5, 2) NOT NULL,
-        guarantee_period        DECIMAL(2, 1) NOT NULL
+        guarantee_period        DECIMAL(2, 1) NOT NULL,
+        status                  ENUM('available', 'unavailable', 'archived') NOT NULL DEFAULT 'available'
 );
 
 CREATE TABLE order_product (
@@ -127,7 +127,7 @@ CREATE TABLE product_photo (
 
 CREATE TABLE order_return (
         order_return_id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        ordered_product_id      INT UNSIGNED NOT NULL,
+        order_product_id        INT UNSIGNED NOT NULL,
         description             VARCHAR(1024) NOT NULL,
         return_date_time        DATETIME NOT NULL,
         is_accepted             BOOLEAN NOT NULL
@@ -167,12 +167,13 @@ ALTER TABLE order_product ADD CONSTRAINT order_product_seller_id_fk FOREIGN KEY(
 
 ALTER TABLE product_photo ADD CONSTRAINT product_photo_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
 
-ALTER TABLE order_return ADD CONSTRAINT order_return_ordered_product_id_fk FOREIGN KEY(ordered_product_id) REFERENCES
+ALTER TABLE order_return ADD CONSTRAINT order_return_order_product_id_fk FOREIGN KEY(order_product_id) REFERENCES
     product(product_id);
 
 
 CREATE INDEX notification_sender_id_idx ON notification(sender_id);
 CREATE INDEX notification_receiver_id_idx ON notification(receiver_id);
+CREATE INDEX notification_sent_date_time_idx ON notification(sent_date_time);
 
 CREATE INDEX contact_sender_id_idx ON contact(sender_id);
 CREATE INDEX contact_receiver_id_idx ON contact(receiver_id);
@@ -205,5 +206,5 @@ CREATE INDEX order_seller_id_idx ON order_product(seller_id);
 
 CREATE INDEX product_photo_product_id_idx ON product_photo(product_id);
 
-CREATE INDEX order_return_ordered_product_id_idx ON order_return(ordered_product_id);
+CREATE INDEX order_return_order_product_id_idx ON order_return(order_product_id);
 CREATE INDEX order_return_return_date_time_idx ON order_return(return_date_time);
