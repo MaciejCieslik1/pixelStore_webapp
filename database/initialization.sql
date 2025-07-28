@@ -45,7 +45,6 @@ CREATE TABLE verification_code (
 CREATE TABLE user_preferences (
         user_preferences_id     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id                 INT UNSIGNED NOT NULL,
-        language                VARCHAR(32) NOT NULL,
         dark_mode               BOOLEAN NOT NULL
 );
 
@@ -107,7 +106,8 @@ CREATE TABLE product (
         length                  DECIMAL(5, 2) NOT NULL,
         width                   DECIMAL(5, 2) NOT NULL,
         height                  DECIMAL(5, 2) NOT NULL,
-        guarantee_period        DECIMAL(2, 1) NOT NULL
+        guarantee_period        DECIMAL(2, 1) NOT NULL,
+        status                  ENUM('available', 'unavailable', 'archived') NOT NULL DEFAULT 'available'
 );
 
 CREATE TABLE order_product (
