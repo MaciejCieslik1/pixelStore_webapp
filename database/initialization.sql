@@ -173,6 +173,7 @@ ALTER TABLE order_return ADD CONSTRAINT order_return_order_product_id_fk FOREIGN
 
 CREATE INDEX notification_sender_id_idx ON notification(sender_id);
 CREATE INDEX notification_receiver_id_idx ON notification(receiver_id);
+CREATE INDEX notification_sent_date_time_idx ON notification(sent_date_time);
 
 CREATE INDEX contact_sender_id_idx ON contact(sender_id);
 CREATE INDEX contact_receiver_id_idx ON contact(receiver_id);
