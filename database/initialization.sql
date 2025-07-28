@@ -127,7 +127,7 @@ CREATE TABLE product_photo (
 
 CREATE TABLE order_return (
         order_return_id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        ordered_product_id      INT UNSIGNED NOT NULL,
+        order_product_id        INT UNSIGNED NOT NULL,
         description             VARCHAR(1024) NOT NULL,
         return_date_time        DATETIME NOT NULL,
         is_accepted             BOOLEAN NOT NULL
@@ -167,7 +167,7 @@ ALTER TABLE order_product ADD CONSTRAINT order_product_seller_id_fk FOREIGN KEY(
 
 ALTER TABLE product_photo ADD CONSTRAINT product_photo_product_id_fk FOREIGN KEY(product_id) REFERENCES product(product_id);
 
-ALTER TABLE order_return ADD CONSTRAINT order_return_ordered_product_id_fk FOREIGN KEY(ordered_product_id) REFERENCES
+ALTER TABLE order_return ADD CONSTRAINT order_return_order_product_id_fk FOREIGN KEY(order_product_id) REFERENCES
     product(product_id);
 
 
@@ -205,5 +205,5 @@ CREATE INDEX order_seller_id_idx ON order_product(seller_id);
 
 CREATE INDEX product_photo_product_id_idx ON product_photo(product_id);
 
-CREATE INDEX order_return_ordered_product_id_idx ON order_return(ordered_product_id);
+CREATE INDEX order_return_order_product_id_idx ON order_return(order_product_id);
 CREATE INDEX order_return_return_date_time_idx ON order_return(return_date_time);
