@@ -9,5 +9,8 @@ class User(models.Model):
     bio = models.CharField(max_length=1024, null=False)
     money = models.DecimalField(max_digits=10, decimal_places=2, null=False)
 
+    class Meta:
+        db_table = 'user'
+
     def __str__(self):
         return "Email: " + self.email
