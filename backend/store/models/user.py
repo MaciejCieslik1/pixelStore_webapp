@@ -14,3 +14,13 @@ class User(models.Model):
 
     def __str__(self):
         return "Email: " + self.email
+
+    @classmethod
+    def create_user(cls, data: dict, password_hash: str):
+        return cls(
+            email=data["email"],
+            username=data["username"],
+            password_hash=password_hash,
+            bio="I'm new here!",
+            money=0.00
+        )
