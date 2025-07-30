@@ -1,3 +1,4 @@
+from datetime import date
 from django.db import models
 from .user import User
 
@@ -13,3 +14,12 @@ class UserStatistics(models.Model):
 
     def __str__(self):
         return "Products bought: " + str(self.products_bought) + ", sold: " + str(self.products_sold)
+
+    @classmethod
+    def create_user_statistics(cls, user: User):
+        return cls(
+            user=user,
+            creation_date=date.today(),
+            products_bought=0,
+            products_sold=0
+        )
