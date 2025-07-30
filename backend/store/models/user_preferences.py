@@ -11,3 +11,10 @@ class UserPreferences(models.Model):
 
     def __str__(self):
         return "Dark_mode: " + str(self.dark_mode)
+
+    @classmethod
+    def create_user_preferences(cls, user: User):
+        return cls(
+            user=user,
+            dark_mode=False
+        )
