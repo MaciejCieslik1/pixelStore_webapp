@@ -17,3 +17,18 @@ class UserNotFoundError(ValidationError):
 
 class InvalidPasswordError(ValidationError):
     pass
+
+class UserNotVerifiedError(ValidationError):
+    pass
+
+class NoVerificationCodeFoundError(ValidationError):
+    pass
+
+class InvalidVerificationCodeError(ValidationError):
+    pass
+
+class ExpiredVerificationCodeError(ValidationError):
+    pass
+
+class MissingCredentialsError(ValidationError):
+    pass
