@@ -1,13 +1,15 @@
 from django.db import DatabaseError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from datetime import datetime, timedelta
 from django.conf import settings
-from backend.store.exceptions import EmailAlreadyTakenError, UsernameAlreadyTakenError, MissingEmailError, \
-    MissingPasswordError, InvalidPasswordError, UserNotFoundError
-from backend.store.service.authentication_service import RegisterService, LoginService, VerifyTokenService
+from ..exceptions import EmailAlreadyTakenError, UsernameAlreadyTakenError, MissingEmailError, \
+    MissingPasswordError, InvalidPasswordError, UserNotFoundError, UserNotVerifiedError, InvalidVerificationCodeError, \
+    NoVerificationCodeFoundError, ExpiredVerificationCodeError, MissingCredentialsError
+from ..service.authentication_service import RegisterService, LoginService, VerifyTokenService, \
+    RefreshTokenService, VerifyAccountService, LogoutService
 import jwt
 
 
@@ -28,7 +30,7 @@ class RegisterView(APIView):
         try:
             communicate = self.register_service.register_user(request.data)
             return Response({"msg": communicate}, status=status.HTTP_201_CREATED)
-        except KeyError as e:
+        except MissingCredentialsError as e:
             return Response(
                 {"error": f"Missing field: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
@@ -38,9 +40,9 @@ class RegisterView(APIView):
                 {"error": "Validation error", "details": e.message_dict if hasattr(e, "message_dict") else str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        except DatabaseError:
+        except DatabaseError as e:
             return Response(
-                {"error": "Database error occurred."},
+                {"error": "Database error occurred.", "details": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
         except Exception as e:
@@ -61,11 +63,11 @@ class LoginView(APIView):
 
     def post(self, request: Request) -> Response:
         try:
-            access_token, refresh_token = self.login_service.login_user(request.data)
+            tokens = self.login_service.login_user(request.data)
             return Response({
                         "msg": "User successfully logged.",
-                        "access_token": access_token,
-                        "refresh_token": refresh_token},
+                        "access_token": tokens["access_token"],
+                        "refresh_token": tokens["refresh_token"],},
                         status=status.HTTP_200_OK
             )
         except (MissingEmailError, MissingPasswordError) as e:
@@ -83,6 +85,62 @@ class LoginView(APIView):
                 {"error": "Invalid credentials.", "details": str(e)},
                 status=status.HTTP_403_FORBIDDEN
             )
+        except UserNotVerifiedError as e:
+            return Response(
+                    {"error": "Validation error", "details": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Unexpected error.", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def __init__(self, logout_service: LogoutService, **kwargs):
+        super().__init__(**kwargs)
+        self._logout_service = logout_service
+
+    @property
+    def logout_service(self):
+        return self._logout_service
+
+    def post(self, request: Request) -> Response:
+        try:
+            self.logout_service.logout_user(request.data)
+            return Response({"msg": "User successfully logged out."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": "Unexpected error.", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class VerifyAccountView(APIView):
+    def __init__(self, verify_account_service: VerifyAccountService, **kwargs):
+        super().__init__(**kwargs)
+        self._verify_account_service = verify_account_service
+
+    @property
+    def verify_account_service(self):
+        return self._verify_account_service
+
+    def post(self, request: Request) -> Response:
+        try:
+            self.verify_account_service.verify_account(request.data)
+            return Response({"msg": "Account successfully verified."}, status=status.HTTP_200_OK)
+        except NoVerificationCodeFoundError as e:
+            return Response(
+                {"error": "Missing credentials.", "details": str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
+            return Response(
+                {"error": "Verification code error.", "details": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         except Exception as e:
             return Response(
                 {"error": "Unexpected error.", "details": str(e)},
@@ -99,7 +157,7 @@ class VerifyTokenView(APIView):
     def verify_token_service(self):
         return self._verify_token_service
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         try:
             self.verify_token_service.verify_token(request.data)
             return Response({"valid": True, "msg": "Access token is valid."}, status=status.HTTP_200_OK)
@@ -123,7 +181,7 @@ class RefreshTokenView(APIView):
     def refresh_token_service(self):
         return self._refresh_token_service
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         try:
             access_token = self.refresh_token_service.refresh_access_token(request.data)
             return Response({
