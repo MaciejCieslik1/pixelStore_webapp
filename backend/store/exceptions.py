@@ -32,3 +32,6 @@ class ExpiredVerificationCodeError(ValidationError):
 
 class MissingCredentialsError(ValidationError):
     pass
+
+class PasswordsNotMatchError(ValueError):
+    pass
