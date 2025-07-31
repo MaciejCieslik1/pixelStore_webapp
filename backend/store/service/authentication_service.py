@@ -4,12 +4,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
-from rest_framework.request import Request
+from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
+from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+
 from ..models import User, UserPreferences, UserStatistics, Address, VerificationCode
-from ..exceptions import EmailAlreadyTakenError, UsernameAlreadyTakenError, MissingEmailError, \
-    MissingPasswordError, UserNotFoundError, InvalidPasswordError, UserNotVerifiedError, NoVerificationCodeFoundError, \
-    InvalidVerificationCodeError, ExpiredVerificationCodeError
+from ..exceptions import *
 import jwt
 
 SECRET_KEY = settings.SECRET_KEY
@@ -95,28 +96,20 @@ class LoginService:
 class TokenGenerator:
     @staticmethod
     def generate_access_token(user: User) -> str:
-        now = timezone.now()
-        access_payload = {
-            'user_id': user.user_id,
-            'exp': now + timedelta(minutes=15),
-            'iat': now,
-        }
-        return jwt.encode(access_payload, SECRET_KEY, algorithm=ALGORITHM)
+        access_token = AccessToken.for_user(user)
+        return str(access_token)
 
     @staticmethod
     def generate_refresh_token(user: User) -> str:
-        now = timezone.now()
-        refresh_payload = {
-            'user_id': user.user_id,
-            'exp': now + timedelta(days=1),
-            'iat': now,
-        }
-        return jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
+        refresh_token = RefreshToken.for_user(user)
+        return str(refresh_token)
 
 
 class LogoutService:
-    def logout_user(self, request: Request):
-        request.user.auth_token.delete()
+    permission_classes = [IsAuthenticated]
+
+    def logout_user(self, user: User):
+        Token.objects.filter(user=user).delete()
 
 
 class VerifyAccountService:
@@ -126,23 +119,27 @@ class VerifyAccountService:
         except ObjectDoesNotExist:
             raise UserNotFoundError("User with provided email does not exist.")
 
-        self.check_verification_code_credentials(user, data["code"])
+        VerificationCodeHandling.check_verification_code_credentials(user, data["code"])
 
         user.is_verified = True
         user.save()
 
-        self.change_verification_code(user)
+        VerificationCodeHandling.change_verification_code(user)
 
-    def check_verification_code_credentials(self, user: User, input_code: str):
+
+class VerificationCodeHandling:
+    @staticmethod
+    def check_verification_code_credentials(user: User, input_code: str):
         if not hasattr(user, 'verification_code'):
             raise NoVerificationCodeFoundError("No verification code found.")
         if user.verification_code.code != input_code:
             raise InvalidVerificationCodeError("Incorrect verification code.")
         if user.verification_code.expiration_date_time < timezone.now():
-            self.change_verification_code(user)
+            VerificationCodeHandling.change_verification_code(user)
             raise ExpiredVerificationCodeError("Verification code has expired.")
 
-    def change_verification_code(self, user: User):
+    @staticmethod
+    def change_verification_code(user: User):
         verification_code = user.verification_code
         verification_code.delete()
         verification_code = VerificationCode.create_verification_code(user)
@@ -169,3 +166,25 @@ class RefreshTokenService:
         refresh_token = data.get('refresh_token')
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload.get('user_id')
+
+
+class ResetPasswordService:
+    permission_classes = [IsAuthenticated]
+
+    def reset_password(self, user: User, data: dict):
+        if data["code"] != user.verification_code.code:
+            raise InvalidVerificationCodeError("Incorrect verification code.")
+
+        if data["password1"] != data["password2"]:
+            raise PasswordsNotMatchError("Passwords don't match.")
+
+        password_hash = make_password(data["password1"])
+        user.password_hash = password_hash
+        user.save()
+
+
+class ResendVerificationCodeService:
+    permission_classes = [IsAuthenticated]
+
+    def resend_verification_code(self, user: User):
+        VerificationCodeHandling.change_verification_code(user)
