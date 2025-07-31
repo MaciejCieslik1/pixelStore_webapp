@@ -1,15 +1,9 @@
 from django.db import DatabaseError
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.conf import settings
-from ..exceptions import EmailAlreadyTakenError, UsernameAlreadyTakenError, MissingEmailError, \
-    MissingPasswordError, InvalidPasswordError, UserNotFoundError, UserNotVerifiedError, InvalidVerificationCodeError, \
-    NoVerificationCodeFoundError, ExpiredVerificationCodeError, MissingCredentialsError
-from ..service.authentication_service import RegisterService, LoginService, VerifyTokenService, \
-    RefreshTokenService, VerifyAccountService, LogoutService
+from ..service.authentication_service import *
 import jwt
 
 
@@ -203,6 +197,61 @@ class RefreshTokenView(APIView):
             return Response(
                 {"error": "User not found.", "details": str(e)},
                 status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Unexpected error.", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ResetPasswordView(APIView):
+    def __init__(self, reset_password_service: ResetPasswordService, **kwargs):
+        super().__init__(**kwargs)
+        self._reset_password_view = reset_password_service
+
+    @property
+    def reset_password_service(self):
+        return self._reset_password_view
+
+    def post(self, request: Request) -> Response:
+        try:
+            self.reset_password_service.reset_password(request.user, request.data)
+            return Response({"msg": "Password changed successfully."}, status=status.HTTP_200_OK)
+        except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
+            return Response(
+                {"error": "Verification code error.", "details": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except PasswordsNotMatchError as e:
+            return Response(
+                {"error": "Changing password error.", "details": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Unexpected error.", "details": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ResendVerificationCodeView(APIView):
+    def __init__(self, resend_verification_code_service: ResendVerificationCodeService, **kwargs):
+        super().__init__(**kwargs)
+        self._resend_verification_code_service = resend_verification_code_service
+
+    @property
+    def resend_verification_code_service(self):
+        return self._resend_verification_code_service
+
+    def post(self, request: Request) -> Response:
+        try:
+            self.resend_verification_code_service.resend_verification_code(request.user)
+            return Response({"msg": "Verification code sent."}, status=status.HTTP_200_OK)
+        except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
+            return Response(
+                {"error": "Verification code error.", "details": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
             return Response(
