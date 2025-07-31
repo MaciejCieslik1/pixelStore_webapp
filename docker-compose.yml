@@ -24,6 +24,7 @@ services:
       - DATABASE_NAME=pixelStore_database
       - DATABASE_USER=student
       - DATABASE_PASSWORD=student
+      - DJANGO_SETTINGS_MODULE=config.settings
     healthcheck:
       test: [ "CMD-SHELL", "curl -s http://localhost:8000/ || true" ]
       interval: 10s
