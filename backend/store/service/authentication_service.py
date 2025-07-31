@@ -1,33 +1,40 @@
 from datetime import timedelta
 from django.contrib.auth.hashers import make_password, check_password
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import send_mail
+from django.db import transaction
 from django.utils import timezone
-from backend.config.settings import SECRET_KEY
-from backend.store.models import User, UserPreferences, UserStatistics, Address, VerificationCode
-from backend.store.views.authentication_view import ALGORITHM
-from backend.store.exceptions import EmailAlreadyTakenError, UsernameAlreadyTakenError, MissingEmailError, \
-    MissingPasswordError, UserNotFoundError, InvalidPasswordError
+from rest_framework.request import Request
+from django.conf import settings
+from ..models import User, UserPreferences, UserStatistics, Address, VerificationCode
+from ..exceptions import EmailAlreadyTakenError, UsernameAlreadyTakenError, MissingEmailError, \
+    MissingPasswordError, UserNotFoundError, InvalidPasswordError, UserNotVerifiedError, NoVerificationCodeFoundError, \
+    InvalidVerificationCodeError, ExpiredVerificationCodeError
 import jwt
+
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = 'HS256'
 
 
 class RegisterService:
     def register_user(self, data: dict) -> str:
         self.check_if_email_or_username_occupied(data)
         password_hash = make_password(data["password"])
+
         user = User.create_user(data, password_hash)
-
-        user.save()
-
         user_preferences = UserPreferences.create_user_preferences(user)
-        user_preferences.save()
-
         user_statistics = UserStatistics.create_user_statistics(user)
-        user_statistics.save()
-
         address = Address.create_address(data, user)
-        address.save()
-
         verification_code = VerificationCode.create_verification_code(user)
-        verification_code.save()
+
+        with transaction.atomic():
+            user.save()
+            user_preferences.save()
+            user_statistics.save()
+            address.save()
+            verification_code.save()
+
+        EmailService.send_code(data["email"], verification_code)
 
         return f"User {user.username} registered successfully"
 
@@ -36,6 +43,15 @@ class RegisterService:
             raise EmailAlreadyTakenError("User with this email already exists.")
         if User.objects.filter(username=data["username"]).exists():
             raise UsernameAlreadyTakenError("User with this username already exists.")
+
+
+class EmailService:
+    @staticmethod
+    def send_code(email: str, verification_code: str):
+        subject = "Verification code to pixelStore"
+        message = f"Hi. This is you verification code: {verification_code}"
+
+        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL,[email], fail_silently=False)
 
 
 class LoginService:
@@ -53,6 +69,9 @@ class LoginService:
         self.check_if_email_and_username_are_not_empty(email, password)
         user = self.find_user_if_exists(email)
         self.check_password_correctness(password, user.password_hash)
+
+        if user.is_verified is False:
+            raise UserNotVerifiedError("User not verified.")
 
         return user
 
@@ -95,6 +114,42 @@ class TokenGenerator:
         return jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
+class LogoutService:
+    def logout_user(self, request: Request):
+        request.user.auth_token.delete()
+
+
+class VerifyAccountService:
+    def verify_account(self, data: dict):
+        try:
+            user = User.objects.get(email=data["email"])
+        except ObjectDoesNotExist:
+            raise UserNotFoundError("User with provided email does not exist.")
+
+        self.check_verification_code_credentials(user, data["code"])
+
+        user.is_verified = True
+        user.save()
+
+        self.change_verification_code(user)
+
+    def check_verification_code_credentials(self, user: User, input_code: str):
+        if not hasattr(user, 'verification_code'):
+            raise NoVerificationCodeFoundError("No verification code found.")
+        if user.verification_code.code != input_code:
+            raise InvalidVerificationCodeError("Incorrect verification code.")
+        if user.verification_code.expiration_date_time < timezone.now():
+            self.change_verification_code(user)
+            raise ExpiredVerificationCodeError("Verification code has expired.")
+
+    def change_verification_code(self, user: User):
+        verification_code = user.verification_code
+        verification_code.delete()
+        verification_code = VerificationCode.create_verification_code(user)
+        verification_code.save()
+        EmailService.send_code(user.email, verification_code)
+
+
 class VerifyTokenService:
     def verify_token(self, data: dict):
         token = data.get('token')
@@ -108,9 +163,9 @@ class RefreshTokenService:
             user = User.objects.get(user_id=user_id)
         except User.DoesNotExist:
             raise UserNotFoundError("User with provided id not found.")
-        return  TokenGenerator.generate_access_token(user)
+        return TokenGenerator.generate_access_token(user)
 
     def get_user_id_from_refresh_token(self, data: dict) -> int:
-        refresh_token = data.get('refresh')
+        refresh_token = data.get('refresh_token')
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload.get('user_id')
