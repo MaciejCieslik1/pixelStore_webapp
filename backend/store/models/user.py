@@ -21,6 +21,7 @@ class User(models.Model):
             email=data["email"],
             username=data["username"],
             password_hash=password_hash,
+            is_verified=False,
             bio="I'm new here!",
             money=0.00
         )
