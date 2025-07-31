@@ -38,8 +38,8 @@ CREATE TABLE verification_code (
         verification_id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id                 INT UNSIGNED NOT NULL,
         code                    VARCHAR(10) NOT NULL,
-        expiration_date_time    DATETIME NOT NULL,
-        is_email_verification   BOOLEAN NOT NULL
+        creation_date_time      DATETIME NOT NULL,
+        expiration_date_time    DATETIME NOT NULL
 );
 
 CREATE TABLE user_preferences (
