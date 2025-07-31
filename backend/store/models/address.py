@@ -1,6 +1,5 @@
 from django.db import models
 from .user import User
-from ..requests.CreateUserRequest import CreateUserRequest
 
 
 class Address(models.Model):
