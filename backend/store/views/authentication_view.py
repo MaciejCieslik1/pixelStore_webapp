@@ -105,8 +105,14 @@ class LogoutView(APIView):
 
     def post(self, request: Request) -> Response:
         try:
-            communicate = self.logout_service.logout_user()
+            token = TokenUtils.get_jwt_token_from_request(request)
+            communicate = self.logout_service.logout_user(token, request.user)
             return Response({"msg": communicate}, status=status.HTTP_200_OK)
+        except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
+            return Response(
+                {"error": "Access token error.", "details": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         except Exception as e:
             return Response(
                 {"error": "Unexpected error.", "details": str(e)},
@@ -219,7 +225,8 @@ class ResetPasswordView(APIView):
 
     def post(self, request: Request) -> Response:
         try:
-            self.reset_password_service.reset_password(request.user, request.data)
+            token = TokenUtils.get_jwt_token_from_request(request)
+            self.reset_password_service.reset_password(token, request.user, request.data)
             return Response({"msg": "Password changed successfully."}, status=status.HTTP_200_OK)
         except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
             return Response(
@@ -230,6 +237,11 @@ class ResetPasswordView(APIView):
             return Response(
                 {"error": "Changing password error.", "details": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
+            return Response(
+                {"error": "Access token error.", "details": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
             return Response(
@@ -251,11 +263,17 @@ class ResendVerificationCodeView(APIView):
 
     def post(self, request: Request) -> Response:
         try:
-            self.resend_verification_code_service.resend_verification_code(request.user)
+            token = TokenUtils.get_jwt_token_from_request(request)
+            self.resend_verification_code_service.resend_verification_code(token, request.user)
             return Response({"msg": "Verification code sent."}, status=status.HTTP_200_OK)
         except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
             return Response(
                 {"error": "Verification code error.", "details": str(e)},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
+            return Response(
+                {"error": "Access token error.", "details": str(e)},
                 status=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
