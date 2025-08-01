@@ -35,3 +35,9 @@ class MissingCredentialsError(ValidationError):
 
 class PasswordsNotMatchError(ValueError):
     pass
+
+class TokenExpiredError(ValidationError):
+    pass
+
+class CannotGetTokenFromRequestError(ValueError):
+    pass
