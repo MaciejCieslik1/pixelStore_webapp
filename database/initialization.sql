@@ -27,7 +27,8 @@ CREATE TABLE user (
         bio                     VARCHAR(1024) NOT NULL,
         money                   DECIMAL(10, 2) NOT NULL,
         is_superuser            BOOLEAN NOT NULL DEFAULT FALSE,
-        last_login              DATETIME NULL
+        last_login              DATETIME NULL,
+        token_version           INT UNSIGNED NOT NULL DEFAULT 0
 );
 
 CREATE TABLE contact (
