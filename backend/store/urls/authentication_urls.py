@@ -7,6 +7,8 @@ logout_service = LogoutService()
 verify_account_service = VerifyAccountService()
 verify_token_service = VerifyTokenService()
 refresh_token_service = RefreshTokenService()
+reset_password_service = ResetPasswordService()
+resend_verification_code_service = ResendVerificationCodeService()
 
 urlpatterns = [
     path("register/", RegisterView.as_view(register_service=register_service), name="register"),
@@ -18,8 +20,8 @@ urlpatterns = [
          name="verify_token"),
     path("refresh_token/", RefreshTokenView.as_view(refresh_token_service=refresh_token_service),
          name="refresh_token"),
-    path("reset_password/", ResetPasswordView.as_view(reset_password_service=refresh_token_service),
+    path("reset_password/", ResetPasswordView.as_view(reset_password_service=reset_password_service),
          name="reset_password"),
     path("resend_verification_code/", ResendVerificationCodeView.as_view(resend_verification_code_service=
-        refresh_token_service), name="resend_verification_code"),
+        resend_verification_code_service), name="resend_verification_code"),
 ]
