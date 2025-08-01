@@ -1,6 +1,6 @@
-INSERT INTO user (email, username, password_hash, is_verified, bio, money) VALUES
+INSERT INTO user (email, username, password, is_verified, bio, money, is_superuser, last_login) VALUES
     ('salesman1@gmail.com', 'exemplary_salesman1', '123456789', 1,
-     'I am an exemplary salesman', 1000000);
+     'I am an exemplary salesman', 1000000, false, '2025-08-01 14:00:00');
 
 
 INSERT INTO product (owner_id, name, description, price, amount, color, weight, length, width, height, guarantee_period, status) VALUES
