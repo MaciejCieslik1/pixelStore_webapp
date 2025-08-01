@@ -13,6 +13,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     money = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     is_superuser = models.BooleanField(default=False) # Field required by Django
     last_login = models.DateTimeField(blank=True, null=True) # Field required by Django
+    token_version = models.IntegerField(default=0)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
