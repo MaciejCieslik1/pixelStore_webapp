@@ -1,4 +1,5 @@
 from django.db import DatabaseError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -104,8 +105,8 @@ class LogoutView(APIView):
 
     def post(self, request: Request) -> Response:
         try:
-            self.logout_service.logout_user(request.data)
-            return Response({"msg": "User successfully logged out."}, status=status.HTTP_200_OK)
+            communicate = self.logout_service.logout_user()
+            return Response({"msg": communicate}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response(
                 {"error": "Unexpected error.", "details": str(e)},
@@ -206,13 +207,15 @@ class RefreshTokenView(APIView):
 
 
 class ResetPasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def __init__(self, reset_password_service: ResetPasswordService, **kwargs):
         super().__init__(**kwargs)
-        self._reset_password_view = reset_password_service
+        self._reset_password_service = reset_password_service
 
     @property
     def reset_password_service(self):
-        return self._reset_password_view
+        return self._reset_password_service
 
     def post(self, request: Request) -> Response:
         try:
@@ -236,6 +239,8 @@ class ResetPasswordView(APIView):
 
 
 class ResendVerificationCodeView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def __init__(self, resend_verification_code_service: ResendVerificationCodeService, **kwargs):
         super().__init__(**kwargs)
         self._resend_verification_code_service = resend_verification_code_service
