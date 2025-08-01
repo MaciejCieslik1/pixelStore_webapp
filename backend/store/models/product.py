@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.db import models
 from django.db.models.enums import TextChoices
-from .user import User
+
 
 class Product(models.Model):
 
@@ -10,7 +11,7 @@ class Product(models.Model):
         ARCHIVED = "archived"
 
     product_id = models.AutoField(primary_key=True)
-    owner = models.ForeignKey(User, on_delete=models.PROTECT, related_name='products')
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='products')
     name = models.CharField(max_length=64, null=False)
     description = models.CharField(max_length=1024, null=False)
     price = models.DecimalField(max_digits=8, decimal_places=2, null=False)

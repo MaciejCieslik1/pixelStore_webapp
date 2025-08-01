@@ -4,7 +4,7 @@ USE pixelStore_database;
 
 
 CREATE USER IF NOT EXISTS 'student'@'%' IDENTIFIED BY 'student';
-GRANT SELECT, INSERT, UPDATE, DELETE ON pixelStore_database.* TO 'student'@'%';
+GRANT ALL PRIVILEGES ON pixelStore_database.* TO 'student'@'%';
 
 FLUSH PRIVILEGES;
 
@@ -22,10 +22,13 @@ CREATE TABLE user (
         user_id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         email                   VARCHAR(64) NOT NULL UNIQUE,
         username                VARCHAR(32) NOT NULL UNIQUE,
-        password_hash           VARCHAR(96) NOT NULL,
+        password                VARCHAR(128) NOT NULL,
         is_verified             BOOLEAN NOT NULL,
         bio                     VARCHAR(1024) NOT NULL,
-        money                   DECIMAL(10, 2) NOT NULL
+        money                   DECIMAL(10, 2) NOT NULL,
+        is_superuser            BOOLEAN NOT NULL DEFAULT FALSE,
+        last_login              DATETIME NULL,
+        token_version           INT UNSIGNED NOT NULL DEFAULT 0
 );
 
 CREATE TABLE contact (
@@ -38,8 +41,8 @@ CREATE TABLE verification_code (
         verification_id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         user_id                 INT UNSIGNED NOT NULL,
         code                    VARCHAR(10) NOT NULL,
-        expiration_date_time    DATETIME NOT NULL,
-        is_email_verification   BOOLEAN NOT NULL
+        creation_date_time      DATETIME NOT NULL,
+        expiration_date_time    DATETIME NOT NULL
 );
 
 CREATE TABLE user_preferences (

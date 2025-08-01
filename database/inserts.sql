@@ -1,4 +1,4 @@
-INSERT INTO user (email, username, password_hash, is_verified, bio, money) VALUES
+INSERT INTO user (email, username, password, is_verified, bio, money) VALUES
     ('salesman1@gmail.com', 'exemplary_salesman1', '123456789', 1,
      'I am an exemplary salesman', 1000000);
 
