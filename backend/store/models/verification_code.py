@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from .user import User
 from django.utils import timezone
@@ -7,7 +8,7 @@ import random
 
 class VerificationCode(models.Model):
     verification_id = models.AutoField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verification_code')
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='verification_code')
     code = models.CharField(max_length=10, null=False)
     creation_date_time = models.DateTimeField(null=False)
     expiration_date_time = models.DateTimeField(null=False)
