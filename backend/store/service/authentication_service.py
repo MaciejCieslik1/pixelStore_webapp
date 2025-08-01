@@ -1,17 +1,10 @@
-import uuid
-from datetime import timedelta
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import send_mail
 from django.db import transaction
-from django.utils import timezone
-from django.conf import settings
-from ..models import User, UserPreferences, UserStatistics, Address, VerificationCode
+from ..helper_classes.authentication_helper import *
+from ..models import User, VerificationCode, Address, UserStatistics, UserPreferences
 from ..exceptions import *
 import jwt
-
-SECRET_KEY = settings.SECRET_KEY
-ALGORITHM = 'HS256'
 
 
 class RegisterService:
@@ -31,7 +24,7 @@ class RegisterService:
             address.save()
             verification_code.save()
 
-        EmailService.send_code(data["email"], verification_code)
+        EmailSender.send_code(data["email"], verification_code)
 
         return f"User {user.username} registered successfully"
 
@@ -42,18 +35,11 @@ class RegisterService:
             raise UsernameAlreadyTakenError("User with this username already exists.")
 
 
-class EmailService:
-    @staticmethod
-    def send_code(email: str, verification_code: str):
-        subject = "Verification code to pixelStore"
-        message = f"Hi. This is you verification code: {verification_code}"
-
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL,[email], fail_silently=False)
-
-
 class LoginService:
     def login_user(self, data: dict) -> dict:
         user = self.verify_user(data)
+        user.token_version += 1
+        user.save()
         return {
             'access_token': TokenGenerator.generate_access_token(user),
             'refresh_token': TokenGenerator.generate_refresh_token(user)
@@ -89,34 +75,9 @@ class LoginService:
             raise InvalidPasswordError("Invalid password.")
 
 
-class TokenGenerator:
-    @staticmethod
-    def generate_access_token(user: User) -> str:
-        now = timezone.now()
-        access_payload = {
-            'user_id': user.user_id,
-            'token_type': 'access',
-            'jti': str(uuid.uuid4()),
-            'exp': now + timedelta(minutes=15),
-            'iat': now,
-        }
-        return jwt.encode(access_payload, SECRET_KEY, algorithm=ALGORITHM)
-
-    @staticmethod
-    def generate_refresh_token(user: User) -> str:
-        now = timezone.now()
-        refresh_payload = {
-            'user_id': user.user_id,
-            'token_type': 'refresh',
-            'jti': str(uuid.uuid4()),
-            'exp': now + timedelta(days=1),
-            'iat': now,
-        }
-        return jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
-
-
 class LogoutService:
-    def logout_user(self) -> str:
+    def logout_user(self,token: str, user: User) -> str:
+        TokenUtils.verify_access_token(token, user)
         return "User successfully logged out."
 
 
@@ -133,26 +94,6 @@ class VerifyAccountService:
         user.save()
 
         VerificationCodeHandling.change_verification_code(user)
-
-
-class VerificationCodeHandling:
-    @staticmethod
-    def check_verification_code_credentials(user: User, input_code: str):
-        if not hasattr(user, 'verification_code'):
-            raise NoVerificationCodeFoundError("No verification code found.")
-        if user.verification_code.code != input_code:
-            raise InvalidVerificationCodeError("Incorrect verification code.")
-        if user.verification_code.expiration_date_time < timezone.now():
-            VerificationCodeHandling.change_verification_code(user)
-            raise ExpiredVerificationCodeError("Verification code has expired.")
-
-    @staticmethod
-    def change_verification_code(user: User):
-        verification_code = user.verification_code
-        verification_code.delete()
-        verification_code = VerificationCode.create_verification_code(user)
-        verification_code.save()
-        EmailService.send_code(user.email, verification_code)
 
 
 class VerifyTokenService:
@@ -177,7 +118,8 @@ class RefreshTokenService:
 
 
 class ResetPasswordService:
-    def reset_password(self, user: User, data: dict):
+    def reset_password(self, token: str, user: User, data: dict):
+        TokenUtils.verify_access_token(token, user)
         if data["code"] != user.verification_code.code:
             raise InvalidVerificationCodeError("Incorrect verification code.")
 
@@ -190,5 +132,6 @@ class ResetPasswordService:
 
 
 class ResendVerificationCodeService:
-    def resend_verification_code(self, user: User):
+    def resend_verification_code(self, token: str, user: User):
+        TokenUtils.verify_access_token(token, user)
         VerificationCodeHandling.change_verification_code(user)
