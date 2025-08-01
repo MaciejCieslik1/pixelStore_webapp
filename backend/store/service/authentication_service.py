@@ -1,14 +1,11 @@
+import uuid
 from datetime import timedelta
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db import transaction
 from django.utils import timezone
-from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
-from rest_framework.authtoken.models import Token
-from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
-
 from ..models import User, UserPreferences, UserStatistics, Address, VerificationCode
 from ..exceptions import *
 import jwt
@@ -20,9 +17,8 @@ ALGORITHM = 'HS256'
 class RegisterService:
     def register_user(self, data: dict) -> str:
         self.check_if_email_or_username_occupied(data)
-        password_hash = make_password(data["password"])
 
-        user = User.create_user(data, password_hash)
+        user = User.create_user(data)
         user_preferences = UserPreferences.create_user_preferences(user)
         user_statistics = UserStatistics.create_user_statistics(user)
         address = Address.create_address(data, user)
@@ -69,7 +65,7 @@ class LoginService:
 
         self.check_if_email_and_username_are_not_empty(email, password)
         user = self.find_user_if_exists(email)
-        self.check_password_correctness(password, user.password_hash)
+        self.check_password_correctness(password, user.password) # user.password is hashed password
 
         if user.is_verified is False:
             raise UserNotVerifiedError("User not verified.")
@@ -96,20 +92,32 @@ class LoginService:
 class TokenGenerator:
     @staticmethod
     def generate_access_token(user: User) -> str:
-        access_token = AccessToken.for_user(user)
-        return str(access_token)
+        now = timezone.now()
+        access_payload = {
+            'user_id': user.user_id,
+            'token_type': 'access',
+            'jti': str(uuid.uuid4()),
+            'exp': now + timedelta(minutes=15),
+            'iat': now,
+        }
+        return jwt.encode(access_payload, SECRET_KEY, algorithm=ALGORITHM)
 
     @staticmethod
     def generate_refresh_token(user: User) -> str:
-        refresh_token = RefreshToken.for_user(user)
-        return str(refresh_token)
+        now = timezone.now()
+        refresh_payload = {
+            'user_id': user.user_id,
+            'token_type': 'refresh',
+            'jti': str(uuid.uuid4()),
+            'exp': now + timedelta(days=1),
+            'iat': now,
+        }
+        return jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
 class LogoutService:
-    permission_classes = [IsAuthenticated]
-
-    def logout_user(self, user: User):
-        Token.objects.filter(user=user).delete()
+    def logout_user(self) -> str:
+        return "User successfully logged out."
 
 
 class VerifyAccountService:
@@ -169,8 +177,6 @@ class RefreshTokenService:
 
 
 class ResetPasswordService:
-    permission_classes = [IsAuthenticated]
-
     def reset_password(self, user: User, data: dict):
         if data["code"] != user.verification_code.code:
             raise InvalidVerificationCodeError("Incorrect verification code.")
@@ -179,12 +185,10 @@ class ResetPasswordService:
             raise PasswordsNotMatchError("Passwords don't match.")
 
         password_hash = make_password(data["password1"])
-        user.password_hash = password_hash
+        user.password = password_hash
         user.save()
 
 
 class ResendVerificationCodeService:
-    permission_classes = [IsAuthenticated]
-
     def resend_verification_code(self, user: User):
         VerificationCodeHandling.change_verification_code(user)
