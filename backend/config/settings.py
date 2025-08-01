@@ -85,11 +85,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv("DATABASE_NAME"),
-        'USER': os.getenv("DATABASE_USER"),
-        'PASSWORD': os.getenv("DATABASE_PASSWORD"),
-        'HOST': os.getenv("DATABASE_HOST"),
-        'PORT': os.getenv("DATABASE_PORT", "3306"),
+        'NAME': os.getenv('DATABASE_NAME', 'pixelStore_database'),
+        'USER': os.getenv('DATABASE_USER', 'student'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'student'),
+        'HOST': os.getenv('DATABASE_HOST', 'database'),
+        'PORT': os.getenv('DATABASE_PORT', '3306'),
     }
 }
 
@@ -142,6 +142,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
+    'USER_ID_FIELD': 'user_id',
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
@@ -153,3 +154,5 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = EMAIL_HOST_USER_SECRET
 EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD_SECRET
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+AUTH_USER_MODEL = 'store.User'
