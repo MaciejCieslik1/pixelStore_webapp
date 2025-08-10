@@ -26,3 +26,12 @@ class Address(models.Model):
             city=data["city"],
             country=data["country"]
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, Address):
+            return NotImplemented
+        return (self.user == other.user and self.address == other.address and self.postal_code == other.postal_code
+            and self.city == other.city and self.country == other.country)
+
+    def __hash__(self):
+        return hash((self.user, self.address, self.postal_code, self.city, self.country))

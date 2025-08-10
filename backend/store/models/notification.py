@@ -15,3 +15,13 @@ class Notification(models.Model):
 
     def __str__(self):
         return "Notification text: " + self.text
+
+    def __eq__(self, other):
+        if not isinstance(other, Notification):
+            return NotImplemented
+        return (self.sender == other.sender and self.receiver == other.receiver and
+            self.sent_date_time == other.sent_date_time and self.text == other.text)
+
+    def __hash__(self):
+        return hash((self.sender, self.receiver, self.sent_date_time, self.text))
+

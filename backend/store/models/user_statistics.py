@@ -24,3 +24,12 @@ class UserStatistics(models.Model):
             products_bought=0,
             products_sold=0
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, UserStatistics):
+            return NotImplemented
+        return (self.user == other.user and self.creation_date == other.creation_date and
+            self.products_bought == other.products_bought and self.products_sold == other.products_sold)
+
+    def __hash__(self):
+        return hash((self.user, self.creation_date, self.products_bought, self.products_sold))

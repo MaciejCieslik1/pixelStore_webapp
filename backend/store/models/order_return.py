@@ -14,3 +14,12 @@ class OrderReturn(models.Model):
 
     def __str__(self):
         return "description: " + str(self.description)
+
+    def __eq__(self, other):
+        if not isinstance(other, OrderReturn):
+            return NotImplemented
+        return (self.order_product == other.order_product and self.description == other.description and
+                self.return_date_time == other.return_date_time and self.is_accepted == other.is_accepted)
+
+    def __hash__(self):
+        return hash((self.order_product, self.description, self.return_date_time, self.is_accepted))

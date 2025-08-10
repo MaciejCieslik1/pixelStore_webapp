@@ -30,3 +30,13 @@ class VerificationCode(models.Model):
             creation_date_time=timezone.now(),
             expiration_date_time=timezone.now() + timedelta(minutes=15)
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, VerificationCode):
+            return NotImplemented
+        return (self.user == other.user and self.code == other.code and
+            self.creation_date_time == other.creation_date_time and
+            self.expiration_date_time == other.expiration_date_time)
+
+    def __hash__(self):
+        return hash((self.user, self.code, self.creation_date_time, self.expiration_date_time))
