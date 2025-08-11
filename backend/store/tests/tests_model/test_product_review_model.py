@@ -20,7 +20,7 @@ class TestProductReviewModel(unittest.TestCase):
         transaction1 = Transaction(buyer=self.buyer, total_price=1000, date_time=self.now, is_finished=False)
         transaction2 = Transaction(buyer=self.buyer, total_price=1000, date_time=self.now, is_finished=True)
 
-        self.assertNotEquals(transaction1, transaction2)
+        self.assertNotEqual(transaction1, transaction2)
 
     def test_hash_same_data(self):
         now = datetime.now()
@@ -33,4 +33,4 @@ class TestProductReviewModel(unittest.TestCase):
         transaction1 = Transaction(buyer=self.buyer, total_price=1000, date_time=self.now, is_finished=False)
         transaction2 = Transaction(buyer=self.buyer, total_price=1000, date_time=self.now, is_finished=True)
 
-        self.assertNotEquals(hash(transaction1), hash(transaction2))
+        self.assertNotEqual(hash(transaction1), hash(transaction2))

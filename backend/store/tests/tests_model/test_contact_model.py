@@ -24,7 +24,7 @@ class TestContactModel(unittest.TestCase):
         contact1 = Contact(sender=self.sender1, receiver=self.receiver1)
         contact2 = Contact(sender=self.sender2, receiver=self.receiver1)
 
-        self.assertNotEquals(contact1, contact2)
+        self.assertNotEqual(contact1, contact2)
 
     def test_hash_same_data(self):
         contact1 = Contact(sender=self.sender1, receiver=self.receiver1)
@@ -36,7 +36,7 @@ class TestContactModel(unittest.TestCase):
         contact1 = Contact(sender=self.sender1, receiver=self.receiver1)
         contact2 = Contact(sender=self.sender1, receiver=self.receiver2)
 
-        self.assertNotEquals(hash(contact1), hash(contact2))
+        self.assertNotEqual(hash(contact1), hash(contact2))
 
 
 if __name__ == "__main__":

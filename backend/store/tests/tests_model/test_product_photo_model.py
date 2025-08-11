@@ -20,7 +20,7 @@ class TestProductPhotoModel(unittest.TestCase):
         product_photo1 = ProductPhoto(product=self.product, image_url="dsfdsfdsds", is_main_photo=True)
         product_photo2 = ProductPhoto(product=self.product, image_url="dsfdsfdsds", is_main_photo=False)
 
-        self.assertNotEquals(product_photo1, product_photo2)
+        self.assertNotEqual(product_photo1, product_photo2)
 
     def test_hash_same_data(self):
         product_photo1 = ProductPhoto(product=self.product, image_url="dsfdsfdsds", is_main_photo=True)
@@ -32,4 +32,4 @@ class TestProductPhotoModel(unittest.TestCase):
         product_photo1 = ProductPhoto(product=self.product, image_url="dsfdsfdsds", is_main_photo=True)
         product_photo2 = ProductPhoto(product=self.product, image_url="dsfdsfdsds", is_main_photo=False)
 
-        self.assertNotEquals(hash(product_photo1), hash(product_photo2))
+        self.assertNotEqual(hash(product_photo1), hash(product_photo2))

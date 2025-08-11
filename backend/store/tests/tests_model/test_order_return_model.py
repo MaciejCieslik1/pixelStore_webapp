@@ -30,7 +30,7 @@ class TestOrderReturnModel(unittest.TestCase):
         order_return2 = OrderReturn(order_product=self.order_product, description="return",
                                     return_date_time=self.now, is_accepted=False)
 
-        self.assertNotEquals(order_return1, order_return2)
+        self.assertNotEqual(order_return1, order_return2)
 
     def test_hash_same_data(self):
         order_return1 = OrderReturn(order_product=self.order_product, description="return",
@@ -46,7 +46,7 @@ class TestOrderReturnModel(unittest.TestCase):
         order_return2 = OrderReturn(order_product=self.order_product, description="return",
                                     return_date_time=self.now, is_accepted=False)
 
-        self.assertNotEquals(hash(order_return1), hash(order_return2))
+        self.assertNotEqual(hash(order_return1), hash(order_return2))
 
 if __name__ == "__main__":
     unittest.main()

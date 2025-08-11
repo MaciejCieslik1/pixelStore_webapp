@@ -16,7 +16,7 @@ class TestAddressModel(unittest.TestCase):
     def test_eq_different_data(self):
         address1 = Address(user=self.user, address="aaaaaaa", postal_code="00001", city="Warsaw", country="Poland")
         address2 = Address(user=self.user, address="bbbbbbb", postal_code="00001", city="Warsaw", country="Poland")
-        self.assertNotEquals(address1, address2)
+        self.assertNotEqual(address1, address2)
 
     def test_hash_same_data(self):
         address1 = Address(user=self.user, address="aaaaaaa", postal_code="00001", city="Warsaw", country="Poland")
@@ -26,7 +26,7 @@ class TestAddressModel(unittest.TestCase):
     def test_hash_different_data(self):
         address1 = Address(user=self.user, address="aaaaaaa", postal_code="00001", city="Warsaw", country="Poland")
         address2 = Address(user=self.user, address="bbbbbbb", postal_code="00001", city="Warsaw", country="Poland")
-        self.assertNotEquals(hash(address1), hash(address2))
+        self.assertNotEqual(hash(address1), hash(address2))
 
     def test_create_address(self):
         data = {"address": "aaaaa", "postal_code": "12345", "city": "Warsaw", "country": "Poland"}

@@ -25,7 +25,7 @@ class TestVerificationCodeModel(unittest.TestCase):
         verification_code2 = VerificationCode(user=self.user, code="0123456789", creation_date_time=self.now,
                                               expiration_date_time=self.now)
 
-        self.assertNotEquals(verification_code1, verification_code2)
+        self.assertNotEqual(verification_code1, verification_code2)
 
     def test_hash_same_data(self):
         verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=self.now,
@@ -41,7 +41,7 @@ class TestVerificationCodeModel(unittest.TestCase):
         verification_code2 = VerificationCode(user=self.user, code="0123456789", creation_date_time=self.now,
                                               expiration_date_time=self.now)
 
-        self.assertNotEquals(hash(verification_code1), hash(verification_code2))
+        self.assertNotEqual(hash(verification_code1), hash(verification_code2))
 
     @patch('store.models.verification_code.random.choices', return_value=list("ABC123XYZ0"))
     @patch('store.models.verification_code.timezone.now')

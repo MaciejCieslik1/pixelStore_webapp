@@ -26,7 +26,7 @@ class TestNotificationModel(unittest.TestCase):
         notification2 = Notification(sender=self.sender, receiver=self.receiver,
                                      sent_date_time=self.now, text="bye")
 
-        self.assertNotEquals(notification1, notification2)
+        self.assertNotEqual(notification1, notification2)
 
     def test_hash_same_data(self):
         notification1 = Notification(sender=self.sender, receiver=self.receiver,
@@ -42,7 +42,7 @@ class TestNotificationModel(unittest.TestCase):
         notification2 = Notification(sender=self.sender, receiver=self.receiver,
                                      sent_date_time=self.now, text="bye")
 
-        self.assertNotEquals(hash(notification1), hash(notification2))
+        self.assertNotEqual(hash(notification1), hash(notification2))
 
 if __name__ == "__main__":
     unittest.main()

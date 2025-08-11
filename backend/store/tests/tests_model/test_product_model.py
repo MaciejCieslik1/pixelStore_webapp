@@ -25,7 +25,7 @@ class TestProductModel(unittest.TestCase):
                            color="red", weight=3, length=2, width=0.5, height=1.1, guarantee_period=4,
                            status=Product.ProductStatus.UNAVAILABLE)
 
-        self.assertNotEquals(product1, product2)
+        self.assertNotEqual(product1, product2)
 
     def test_hash_same_data(self):
         product1 = Product(owner=self.owner, name="cpu", description="dsfffefee", price=1000, amount=2,
@@ -45,7 +45,7 @@ class TestProductModel(unittest.TestCase):
                            color="red", weight=3, length=2, width=0.5, height=1.1, guarantee_period=4,
                            status=Product.ProductStatus.UNAVAILABLE)
 
-        self.assertNotEquals(hash(product1), hash(product2))
+        self.assertNotEqual(hash(product1), hash(product2))
 
 if __name__ == "__main__":
     unittest.main()

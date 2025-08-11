@@ -23,7 +23,7 @@ class TestUserStatisticsModel(unittest.TestCase):
         user_statistics2 = UserStatistics(user=self.user, creation_date=date.today(), products_bought=0,
                                           products_sold=1)
 
-        self.assertNotEquals(user_statistics1, user_statistics2)
+        self.assertNotEqual(user_statistics1, user_statistics2)
 
     def test_hash_same_data(self):
         user_statistics1 = UserStatistics(user=self.user, creation_date=date.today(), products_bought=0,
@@ -39,7 +39,7 @@ class TestUserStatisticsModel(unittest.TestCase):
         user_statistics2 = UserStatistics(user=self.user, creation_date=date.today(), products_bought=0,
                                           products_sold=1)
 
-        self.assertNotEquals(hash(user_statistics1), hash(user_statistics2))
+        self.assertNotEqual(hash(user_statistics1), hash(user_statistics2))
 
     def test_create_user_statistics(self):
         user_statistics = UserStatistics.create_user_statistics(self.user)

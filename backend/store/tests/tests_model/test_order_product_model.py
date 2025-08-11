@@ -26,7 +26,7 @@ class TestOrderProductModel(unittest.TestCase):
         order_product2 = OrderProduct(transaction=self.transaction, product=self.product,
                                       seller=self.seller, shopping_price=10)
 
-        self.assertNotEquals(order_product1, order_product2)
+        self.assertNotEqual(order_product1, order_product2)
 
     def test_hash_same_data(self):
         order_product1 = OrderProduct(transaction=self.transaction, product=self.product,
@@ -34,7 +34,7 @@ class TestOrderProductModel(unittest.TestCase):
         order_product2 = OrderProduct(transaction=self.transaction, product=self.product,
                                       seller=self.seller, shopping_price=20)
 
-        self.assertEquals(hash(order_product1), hash(order_product2))
+        self.assertEqual(hash(order_product1), hash(order_product2))
 
     def test_hash_different_data(self):
         order_product1 = OrderProduct(transaction=self.transaction, product=self.product,
@@ -42,7 +42,7 @@ class TestOrderProductModel(unittest.TestCase):
         order_product2 = OrderProduct(transaction=self.transaction, product=self.product,
                                       seller=self.seller, shopping_price=10)
 
-        self.assertNotEquals(hash(order_product1), hash(order_product2))
+        self.assertNotEqual(hash(order_product1), hash(order_product2))
 
 if __name__ == "__main__":
     unittest.main()

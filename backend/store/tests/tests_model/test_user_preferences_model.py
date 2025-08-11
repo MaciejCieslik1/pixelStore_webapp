@@ -17,7 +17,7 @@ class TestUserPreferencesModel(unittest.TestCase):
         user_preferences1 = UserPreferences(user=self.user, dark_mode=True)
         user_preferences2 = UserPreferences(user=self.user, dark_mode=False)
 
-        self.assertNotEquals(user_preferences1, user_preferences2)
+        self.assertNotEqual(user_preferences1, user_preferences2)
 
     def test_hash_same_data(self):
         user_preferences1 = UserPreferences(user=self.user, dark_mode=True)
@@ -29,7 +29,7 @@ class TestUserPreferencesModel(unittest.TestCase):
         user_preferences1 = UserPreferences(user=self.user, dark_mode=True)
         user_preferences2 = UserPreferences(user=self.user, dark_mode=False)
 
-        self.assertNotEquals(hash(user_preferences1), hash(user_preferences2))
+        self.assertNotEqual(hash(user_preferences1), hash(user_preferences2))
 
     def test_create_user_preferences(self):
         user_preferences = UserPreferences.create_user_preferences(self.user)

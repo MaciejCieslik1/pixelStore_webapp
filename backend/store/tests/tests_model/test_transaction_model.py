@@ -43,4 +43,4 @@ class TestTransactionModel(unittest.TestCase):
         product_review2 = ProductReview(product=self.product, rating=4, description="great", reviewer=self.owner,
                                         review_date=self.now)
 
-        self.assertNotEquals(hash(product_review1), hash(product_review2))
+        self.assertNotEqual(hash(product_review1), hash(product_review2))

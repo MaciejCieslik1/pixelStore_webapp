@@ -14,7 +14,7 @@ class TestCategory(unittest.TestCase):
         category1 = Category(name="aaaa", description="bbbb")
         category2 = Category(name="ccc", description="bbbb")
 
-        self.assertNotEquals(category1, category2)
+        self.assertNotEqual(category1, category2)
 
     def test_hash_same_data(self):
         category1 = Category(name="aaaa", description="bbbb")
@@ -26,4 +26,4 @@ class TestCategory(unittest.TestCase):
         category1 = Category(name="aaaa", description="bbbb")
         category2 = Category(name="ccc", description="bbbb")
 
-        self.assertNotEquals(hash(category1), hash(category2))
+        self.assertNotEqual(hash(category1), hash(category2))
