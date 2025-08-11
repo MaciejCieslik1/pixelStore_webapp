@@ -9,40 +9,37 @@ class TestVerificationCodeModel(unittest.TestCase):
     def setUp(self):
         self.user = User(email="sender@example.com", username="testuser1", password="hashedpwd", is_verified=False,
                      bio="I'm new here!", money=0.00, is_superuser=False, last_login=None, token_version=0)
+        self.now = datetime.now()
 
     def test_eq_same_data(self):
-        now = datetime.now()
-        verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=now,
-                                           expiration_date_time=now)
-        verification_code2 = VerificationCode(user=self.user, code="1234567890", creation_date_time=now,
-                                              expiration_date_time=now)
+        verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=self.now,
+                                           expiration_date_time=self.now)
+        verification_code2 = VerificationCode(user=self.user, code="1234567890", creation_date_time=self.now,
+                                              expiration_date_time=self.now)
 
         self.assertEqual(verification_code1, verification_code2)
 
     def test_eq_different_data(self):
-        now = datetime.now()
-        verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=now,
-                                              expiration_date_time=now)
-        verification_code2 = VerificationCode(user=self.user, code="0123456789", creation_date_time=now,
-                                              expiration_date_time=now)
+        verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=self.now,
+                                              expiration_date_time=self.now)
+        verification_code2 = VerificationCode(user=self.user, code="0123456789", creation_date_time=self.now,
+                                              expiration_date_time=self.now)
 
         self.assertNotEquals(verification_code1, verification_code2)
 
     def test_hash_same_data(self):
-        now = datetime.now()
-        verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=now,
-                                              expiration_date_time=now)
-        verification_code2 = VerificationCode(user=self.user, code="1234567890", creation_date_time=now,
-                                              expiration_date_time=now)
+        verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=self.now,
+                                              expiration_date_time=self.now)
+        verification_code2 = VerificationCode(user=self.user, code="1234567890", creation_date_time=self.now,
+                                              expiration_date_time=self.now)
 
         self.assertEqual(hash(verification_code1), hash(verification_code2))
 
     def test_hash_different_data(self):
-        now = datetime.now()
-        verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=now,
-                                              expiration_date_time=now)
-        verification_code2 = VerificationCode(user=self.user, code="0123456789", creation_date_time=now,
-                                              expiration_date_time=now)
+        verification_code1 = VerificationCode(user=self.user, code="1234567890", creation_date_time=self.now,
+                                              expiration_date_time=self.now)
+        verification_code2 = VerificationCode(user=self.user, code="0123456789", creation_date_time=self.now,
+                                              expiration_date_time=self.now)
 
         self.assertNotEquals(hash(verification_code1), hash(verification_code2))
 
