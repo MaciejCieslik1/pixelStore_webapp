@@ -4,6 +4,9 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+from ..serializers.authentication_serializer import RegisterSerializer, LoginSerializer, AccountVerificationSerializer, \
+    TokenVerificationSerializer, RefreshTokenSerializer, ResetPasswordSerializer, ResendVerificationCodeSerializer
 from ..service.authentication_service import *
 import jwt
 
@@ -22,29 +25,32 @@ class RegisterView(APIView):
         return self._register_service
 
     def post(self, request: Request) -> Response:
-        try:
-            communicate = self.register_service.register_user(request.data)
-            return Response({"msg": communicate}, status=status.HTTP_201_CREATED)
-        except MissingCredentialsError as e:
-            return Response(
-                {"error": f"Missing field: {str(e)}"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except (EmailAlreadyTakenError, UsernameAlreadyTakenError) as e:
-            return Response(
-                {"error": "Validation error", "details": e.message_dict if hasattr(e, "message_dict") else str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except DatabaseError as e:
-            return Response(
-                {"error": "Database error occurred.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Unexpected error", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                communicate = self.register_service.register_user(serializer.validated_data)
+                return Response({"msg": communicate}, status=status.HTTP_201_CREATED)
+            except MissingCredentialsError as e:
+                return Response(
+                    {"error": f"Missing field: {str(e)}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except (EmailAlreadyTakenError, UsernameAlreadyTakenError) as e:
+                return Response(
+                    {"error": "Validation error", "details": e.message_dict if hasattr(e, "message_dict") else str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except DatabaseError as e:
+                return Response(
+                    {"error": "Database error occurred.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginView(APIView):
@@ -57,39 +63,42 @@ class LoginView(APIView):
         return self._login_service
 
     def post(self, request: Request) -> Response:
-        try:
-            tokens = self.login_service.login_user(request.data)
-            return Response({
-                        "msg": "User successfully logged.",
-                        "access_token": tokens["access_token"],
-                        "refresh_token": tokens["refresh_token"],},
-                        status=status.HTTP_200_OK
-            )
-        except (MissingEmailError, MissingPasswordError) as e:
-            return Response(
-                {"error": "Missing credentials.", "details": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except UserNotFoundError as e:
-            return Response(
-                {"error": "User not found.", "details": str(e)},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except InvalidPasswordError as e:
-            return Response(
-                {"error": "Invalid credentials.", "details": str(e)},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        except UserNotVerifiedError as e:
-            return Response(
-                    {"error": "Validation error", "details": str(e)},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Unexpected error.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                tokens = self.login_service.login_user(serializer.validated_data)
+                return Response({
+                            "msg": "User successfully logged.",
+                            "access_token": tokens["access_token"],
+                            "refresh_token": tokens["refresh_token"],},
+                            status=status.HTTP_200_OK
+                )
+            except (MissingEmailError, MissingPasswordError) as e:
+                return Response(
+                    {"error": "Missing credentials.", "details": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except UserNotFoundError as e:
+                return Response(
+                    {"error": "User not found.", "details": str(e)},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except InvalidPasswordError as e:
+                return Response(
+                    {"error": "Invalid credentials.", "details": str(e)},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            except UserNotVerifiedError as e:
+                return Response(
+                        {"error": "Validation error", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
@@ -129,24 +138,27 @@ class VerifyAccountView(APIView):
         return self._verify_account_service
 
     def post(self, request: Request) -> Response:
-        try:
-            self.verify_account_service.verify_account(request.data)
-            return Response({"msg": "Account successfully verified."}, status=status.HTTP_200_OK)
-        except NoVerificationCodeFoundError as e:
-            return Response(
-                {"error": "Missing credentials.", "details": str(e)},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
-            return Response(
-                {"error": "Verification code error.", "details": str(e)},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Unexpected error.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer = AccountVerificationSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                self.verify_account_service.verify_account(serializer.validated_data)
+                return Response({"msg": "Account successfully verified."}, status=status.HTTP_200_OK)
+            except NoVerificationCodeFoundError as e:
+                return Response(
+                    {"error": "Missing credentials.", "details": str(e)},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
+                return Response(
+                    {"error": "Verification code error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class VerifyTokenView(APIView):
@@ -159,18 +171,21 @@ class VerifyTokenView(APIView):
         return self._verify_token_service
 
     def post(self, request: Request) -> Response:
-        try:
-            self.verify_token_service.verify_token(request.data)
-            return Response({"valid": True, "msg": "Access token is valid."}, status=status.HTTP_200_OK)
-        except jwt.ExpiredSignatureError:
-            return Response({'valid': False, 'error': 'Access token expired.'}, status=status.HTTP_401_UNAUTHORIZED)
-        except jwt.InvalidTokenError:
-            return Response({'valid': False, 'error': 'Invalid access token.'}, status=status.HTTP_401_UNAUTHORIZED)
-        except Exception as e:
-            return Response(
-                {"error": "Unexpected error.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer = TokenVerificationSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                self.verify_token_service.verify_token(serializer.validated_data)
+                return Response({"valid": True, "msg": "Access token is valid."}, status=status.HTTP_200_OK)
+            except jwt.ExpiredSignatureError:
+                return Response({'valid': False, 'error': 'Access token expired.'}, status=status.HTTP_401_UNAUTHORIZED)
+            except jwt.InvalidTokenError:
+                return Response({'valid': False, 'error': 'Invalid access token.'}, status=status.HTTP_401_UNAUTHORIZED)
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RefreshTokenView(APIView):
@@ -183,33 +198,36 @@ class RefreshTokenView(APIView):
         return self._refresh_token_service
 
     def post(self, request: Request) -> Response:
-        try:
-            access_token = self.refresh_token_service.refresh_access_token(request.data)
-            return Response({
-                "msg": "Access successfully refreshed.",
-                "access_token": access_token},
-                status=status.HTTP_200_OK
-            )
-        except jwt.ExpiredSignatureError:
-            return Response({
-                "msg": "Failed to refresh access token.",
-                'error': 'Refresh token expired.'},
-                status=status.HTTP_401_UNAUTHORIZED)
-        except jwt.InvalidTokenError:
-            return Response({
-                "msg": "Failed to refresh access token.",
-                'error': 'Invalid refresh token.'},
-                status=status.HTTP_401_UNAUTHORIZED)
-        except UserNotFoundError as e:
-            return Response(
-                {"error": "User not found.", "details": str(e)},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Unexpected error.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer = RefreshTokenSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                access_token = self.refresh_token_service.refresh_access_token(serializer.validated_data)
+                return Response({
+                    "msg": "Access successfully refreshed.",
+                    "access_token": access_token},
+                    status=status.HTTP_200_OK
+                )
+            except jwt.ExpiredSignatureError:
+                return Response({
+                    "msg": "Failed to refresh access token.",
+                    'error': 'Refresh token expired.'},
+                    status=status.HTTP_401_UNAUTHORIZED)
+            except jwt.InvalidTokenError:
+                return Response({
+                    "msg": "Failed to refresh access token.",
+                    'error': 'Invalid refresh token.'},
+                    status=status.HTTP_401_UNAUTHORIZED)
+            except UserNotFoundError as e:
+                return Response(
+                    {"error": "User not found.", "details": str(e)},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ResetPasswordView(APIView):
@@ -224,30 +242,33 @@ class ResetPasswordView(APIView):
         return self._reset_password_service
 
     def post(self, request: Request) -> Response:
-        try:
-            token = TokenUtils.get_jwt_token_from_request(request)
-            self.reset_password_service.reset_password(token, request.user, request.data)
-            return Response({"msg": "Password changed successfully."}, status=status.HTTP_200_OK)
-        except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
-            return Response(
-                {"error": "Verification code error.", "details": str(e)},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        except PasswordsNotMatchError as e:
-            return Response(
-                {"error": "Changing password error.", "details": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
-            return Response(
-                {"error": "Access token error.", "details": str(e)},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Unexpected error.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer = ResetPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                token = TokenUtils.get_jwt_token_from_request(serializer.validated_data)
+                self.reset_password_service.reset_password(token, serializer.validated_data)
+                return Response({"msg": "Password changed successfully."}, status=status.HTTP_200_OK)
+            except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
+                return Response(
+                    {"error": "Verification code error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except PasswordsNotMatchError as e:
+                return Response(
+                    {"error": "Changing password error.", "details": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
+                return Response(
+                    {"error": "Access token error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ResendVerificationCodeView(APIView):
@@ -262,22 +283,25 @@ class ResendVerificationCodeView(APIView):
         return self._resend_verification_code_service
 
     def post(self, request: Request) -> Response:
-        try:
-            token = TokenUtils.get_jwt_token_from_request(request)
-            self.resend_verification_code_service.resend_verification_code(token, request.user)
-            return Response({"msg": "Verification code sent."}, status=status.HTTP_200_OK)
-        except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
-            return Response(
-                {"error": "Verification code error.", "details": str(e)},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
-            return Response(
-                {"error": "Access token error.", "details": str(e)},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Unexpected error.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer = ResendVerificationCodeSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                token = TokenUtils.get_jwt_token_from_request(request)
+                self.resend_verification_code_service.resend_verification_code(token, serializer.validated_data)
+                return Response({"msg": "Verification code sent."}, status=status.HTTP_200_OK)
+            except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
+                return Response(
+                    {"error": "Verification code error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
+                return Response(
+                    {"error": "Access token error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
