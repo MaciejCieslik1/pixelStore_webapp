@@ -5,7 +5,7 @@ from store.models import User, UserPreferences, UserStatistics, Address, Verific
 
 @pytest.mark.django_db
 def test_register_user_saves_to_db():
-    data = {"email": "sender@example.com", "username": "testuser1", "password": "hashedpwd", "is_verified": False,
+    data = {"email": "test@example.com", "username": "tester", "password": "hashedpwd", "is_verified": False,
             "bio": "I'm new here!", "money": 0.00, "is_superuser": False, "last_login": None,
             "address": "fweffwe", "postal_code": "00001", "city": "Warsaw", "country": "Poland"}
 
