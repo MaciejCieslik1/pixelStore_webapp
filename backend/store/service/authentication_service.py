@@ -76,7 +76,7 @@ class LoginService:
 
 
 class LogoutService:
-    def logout_user(self,token: str, user: User) -> str:
+    def logout_user(self, token: str, user: User) -> str:
         TokenUtils.verify_access_token(token, user)
         return "User successfully logged out."
 
@@ -118,7 +118,8 @@ class RefreshTokenService:
 
 
 class ResetPasswordService:
-    def reset_password(self, token: str, user: User, data: dict):
+    def reset_password(self, token: str, data: dict):
+        user = data["user"]
         TokenUtils.verify_access_token(token, user)
         if data["code"] != user.verification_code.code:
             raise InvalidVerificationCodeError("Incorrect verification code.")
@@ -132,6 +133,7 @@ class ResetPasswordService:
 
 
 class ResendVerificationCodeService:
-    def resend_verification_code(self, token: str, user: User):
+    def resend_verification_code(self, token: str, data: dict):
+        user = data["user"]
         TokenUtils.verify_access_token(token, user)
         VerificationCodeHandling.change_verification_code(user)
