@@ -49,7 +49,6 @@ class LoginService:
         email = data.get('email')
         password = data.get('password')
 
-        self._check_if_email_and_username_are_not_empty(email, password)
         user = self._find_user_if_exists(email)
         self._check_password_correctness(password, user.password) # user.password is hashed password
 
@@ -57,12 +56,6 @@ class LoginService:
             raise UserNotVerifiedError("User not verified.")
 
         return user
-
-    def _check_if_email_and_username_are_not_empty(self, email: str, password: str):
-        if email is None:
-            raise MissingEmailError("Email is missing.")
-        if password is None:
-            raise MissingPasswordError("Password is missing.")
 
     def _find_user_if_exists(self, email: str) -> User:
         try:
@@ -113,7 +106,14 @@ class RefreshTokenService:
 
     def _get_user_id_from_refresh_token(self, data: dict) -> int:
         refresh_token = data.get('refresh_token')
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        try:
+            payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        except jwt.ExpiredSignatureError:
+            raise RefreshTokenExpiredError("Refresh token has expired.")
+        except jwt.InvalidTokenError:
+            raise InvalidRefreshTokenError("Refresh token is invalid.")
+        if payload.get("token_type") != "refresh":
+            raise TokenTypeMismatchError("Provided token is not a refresh token.")
         return payload.get('user_id')
 
 
