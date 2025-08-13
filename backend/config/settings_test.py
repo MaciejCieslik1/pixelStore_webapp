@@ -34,3 +34,5 @@ DATABASES = {
 DEBUG = False
 
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
+SECRET_KEY = "1ug(exdw&3j=&vg!*gvc)okp8ie$es46ez1!em^meryw0-!anp"
