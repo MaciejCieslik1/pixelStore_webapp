@@ -74,17 +74,17 @@ class TestLoginService:
     @pytest.fixture(autouse=True)
     def setup_data(self):
         self.user_data = AuthenticationHelper.return_exemplary_user_data()
-        AuthenticationHelper.register_user(self.user_data)
+        AuthenticationHelper.register_and_verify_user(self.user_data)
 
     def test_login_user_successfully(self):
         user = User.objects.get(username="tester")
         token_version_before = user.token_version
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
         login_service = LoginService()
 
-        with patch("path.to.TokenGenerator.generate_access_token", return_value="access123") as mock_access, \
-            patch("path.to.TokenGenerator.generate_refresh_token", return_value="refresh123") as mock_refresh:
+        with patch("store.helper_classes.authentication_helper.TokenGenerator.generate_access_token",
+                   return_value="access123") as mock_access, \
+            patch("store.helper_classes.authentication_helper.TokenGenerator.generate_refresh_token",
+                  return_value="refresh123") as mock_refresh:
             result = login_service.login_user(self.user_data)
         user = User.objects.get(username="tester")
         token_version_after = user.token_version
@@ -96,7 +96,9 @@ class TestLoginService:
         assert token_version_after == token_version_before + 1
 
     def test_login_user_not_verified(self):
-        self.user_data["is_verified"] = False
+        user = User.objects.get(username="tester")
+        user.is_verified = False
+        user.save()
 
         LoginTestsHelper.handle_login_process(self.user_data, UserNotVerifiedError, "User not verified.")
 
@@ -110,6 +112,7 @@ class TestLoginService:
         assert f"User with provided email not found." in str(e.value)
 
     def test_login_user_invalid_password(self):
+        self.user_data["password"] = "invalid_password"
 
         LoginTestsHelper.handle_login_process(self.user_data, InvalidPasswordError, "Invalid password.")
 
@@ -130,7 +133,7 @@ class TestLogoutService:
         assert result == "User successfully logged out."
 
     def test_logout_expired_access_token(self):
-        user = User.objects.filter(username="tester")
+        user = User.objects.get(username="tester")
         access_token = TokenTestsHelper.generate_access_token(user.user_id,"access",
                         timezone.now() - timedelta(days=1), timezone.now() - timedelta(days=2),
                                                               token_version=1)
@@ -175,7 +178,8 @@ class TestVerifyAccountService:
         verify_account_service = VerifyAccountService()
         self.user_data["code"] = "bad_code"
 
-        with patch("path.to.VerificationCodeHandling.change_verification_code", return_value="verif123") \
+        with patch("store.helper_classes.authentication_helper.VerificationCodeHandling.change_verification_code",
+                   return_value="verif123") \
                 as mock_verification_code, \
             patch("store.service.authentication_service.EmailSender.send_code") as mock_send:
             verify_account_service.verify_account(self.user_data)
@@ -196,7 +200,8 @@ class TestVerifyAccountService:
         register_service.register_user(self.user_data)
         verify_account_service = VerifyAccountService()
 
-        with patch("path.to.VerificationCodeHandling.change_verification_code", return_value="verif123") \
+        with patch("store.helper_classes.authentication_helper.VerificationCodeHandling.change_verification_code",
+                   return_value="verif123") \
                 as mock_verification_code, \
                 patch("store.service.authentication_service.EmailSender.send_code") as mock_send:
             with pytest.raises(InvalidVerificationCodeError) as e:
@@ -278,7 +283,7 @@ class TestRefreshTokenService:
         login_service = LoginService()
         result = login_service.login_user(self.user_data)
         data = {"refresh_token": result[1]}
-        user = User.objects.filter(username="tester")
+        user = User.objects.get(username="tester")
         service = RefreshTokenService()
 
         access_token = service.refresh_access_token(data)
@@ -296,7 +301,8 @@ class TestRefreshTokenService:
         data = {"refresh_token": result[1]}
         service = RefreshTokenService()
 
-        with patch("path.to.RefreshTokenService._get_user_id_from_refresh_token", return_value="123"):
+        with patch("store.service.authentication_service.RefreshTokenService._get_user_id_from_refresh_token",
+                   return_value="123"):
             with pytest.raises(UserNotFoundError) as e:
                 service.refresh_access_token(data)
 
@@ -305,7 +311,7 @@ class TestRefreshTokenService:
     def test_refresh_access_token_expired(self):
         register_service = RegisterService()
         register_service.register_user(self.user_data)
-        user = User.objects.filter(username="tester")
+        user = User.objects.get(username="tester")
         data = {"refresh_token": TokenTestsHelper.generate_refresh_token(user.user_id,
                 "refresh", timezone.now() - timedelta(days=1), timezone.now() - timedelta(days=2))}
         service = RefreshTokenService()
@@ -318,7 +324,7 @@ class TestRefreshTokenService:
     def test_refresh_access_token_invalid(self):
         register_service = RegisterService()
         register_service.register_user(self.user_data)
-        user = User.objects.filter(username="tester")
+        user = User.objects.get(username="tester")
         data = {"refresh_token": TokenTestsHelper.generate_refresh_token(user.user_id + 10,
                 "refresh", timezone.now() + timedelta(days=1), timezone.now() - timedelta(days=2))}
         service = RefreshTokenService()
@@ -331,7 +337,7 @@ class TestRefreshTokenService:
     def test_refresh_access_token_wrong_type(self):
         register_service = RegisterService()
         register_service.register_user(self.user_data)
-        user = User.objects.filter(username="tester")
+        user = User.objects.get(username="tester")
         data = {"refresh_token": TokenTestsHelper.generate_refresh_token(user.user_id + 10,
                 "access", timezone.now() + timedelta(days=1), timezone.now() - timedelta(days=2))}
         service = RefreshTokenService()
@@ -357,7 +363,7 @@ class TestResetPasswordService:
         reset_password_service.reset_password(self.access_token, data)
 
     def test_reset_password_expired_access_token(self):
-        user = User.objects.filter(username="tester")
+        user = User.objects.get(username="tester")
         access_token = TokenTestsHelper.generate_access_token(user.user_id, "access",
                                                               timezone.now() - timedelta(days=1),
                                                               timezone.now() - timedelta(days=2),
