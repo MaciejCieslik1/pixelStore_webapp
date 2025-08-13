@@ -1,8 +1,13 @@
+from datetime import datetime
 from typing import Type
 from unittest.mock import patch
+
+import jwt
 import pytest
+
+from config import settings_test
 from store.models import User, UserPreferences, UserStatistics, Address, VerificationCode
-from store.service.authentication_service import RegisterService
+from store.service.authentication_service import RegisterService, LoginService, ResetPasswordService
 
 
 class RegistrationTestsHelper:
@@ -38,3 +43,82 @@ class RegistrationTestsHelper:
         assert rows_count["user_stats_after"] == rows_count["user_stats_before"] + additional_rows_number
         assert rows_count["addresses_after"] == rows_count["addresses_before"] + additional_rows_number
         assert rows_count["verif_codes_after"] == rows_count["verif_codes_before"] + additional_rows_number
+
+
+class LoginTestsHelper:
+    @staticmethod
+    def handle_login_process(user_data: dict, exception: Type[BaseException], message: str):
+        user = User.objects.get(username="tester")
+        token_version_before = user.token_version
+        login_service = LoginService()
+
+        with pytest.raises(exception) as e:
+            login_service.login_user(user_data)
+
+        assert f"{message}" in str(e.value)
+        user = User.objects.get(username="tester")
+        token_version_after = user.token_version
+
+        assert token_version_after == token_version_before
+
+SECRET_KEY = settings_test.SECRET_KEY
+ALGORITHM = 'HS256'
+
+class TokenTestsHelper:
+    @staticmethod
+    def generate_refresh_token(user_id: int, token_type: str, exp: datetime, iat: datetime):
+        return jwt.encode({
+            "user_id": user_id,
+            "token_type": token_type,
+            "jti": "test",
+            "exp": exp,
+            "iat": iat,
+        }, SECRET_KEY, algorithm=ALGORITHM)
+
+    @staticmethod
+    def generate_access_token(user_id: int, token_type: str, exp: datetime, iat: datetime, token_version: int):
+        return jwt.encode({
+            "user_id": user_id,
+            "token_type": token_type,
+            "jti": "test",
+            "exp": exp,
+            "iat": iat,
+            "token_version": token_version,
+        }, SECRET_KEY, algorithm=ALGORITHM)
+
+
+class AuthenticationHelper:
+    @staticmethod
+    def register_user(user_data: dict):
+        register_service = RegisterService()
+        register_service.register_user(user_data)
+
+    @staticmethod
+    def login_user(user_data: dict) -> str:
+        login_service = LoginService()
+        result = login_service.login_user(user_data)
+        return result["access_token"]
+
+    @staticmethod
+    def register_and_login_user(user_data: dict) -> str:
+        AuthenticationHelper.register_user(user_data)
+        return AuthenticationHelper.login_user(user_data)
+
+    @staticmethod
+    def return_exemplary_user_data() -> dict:
+        return {"email": "test@example.com", "username": "tester", "password": "hashedpwd",
+         "is_verified": False, "bio": "I'm new here!", "money": 0.00, "is_superuser": False,
+         "last_login": None,
+         "address": "fweffwe", "postal_code": "00001", "city": "Warsaw", "country": "Poland"}
+
+
+class ResetPasswordTestsHelper:
+    @staticmethod
+    def handle_access_token_error(access_token: str, exception: Type[BaseException], message: str):
+        reset_password_service = ResetPasswordService()
+        user = User.objects.get(username="tester")
+        data = {"user": user, "code": user.verification_code, "password1": "fdfddfffd", "password2": "fdfddfffd"}
+
+        with pytest.raises(exception) as e:
+            reset_password_service.reset_password(access_token, data)
+        assert f"{message}" in str(e.value)
