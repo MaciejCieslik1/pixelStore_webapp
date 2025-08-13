@@ -207,15 +207,20 @@ class RefreshTokenView(APIView):
                     "access_token": access_token},
                     status=status.HTTP_200_OK
                 )
-            except jwt.ExpiredSignatureError:
+            except RefreshTokenExpiredError:
                 return Response({
                     "msg": "Failed to refresh access token.",
                     'error': 'Refresh token expired.'},
                     status=status.HTTP_401_UNAUTHORIZED)
-            except jwt.InvalidTokenError:
+            except InvalidRefreshTokenError:
                 return Response({
                     "msg": "Failed to refresh access token.",
                     'error': 'Invalid refresh token.'},
+                    status=status.HTTP_401_UNAUTHORIZED)
+            except TokenTypeMismatchError:
+                return Response({
+                    "msg": "Failed to refresh access token.",
+                    'error': 'Access Token instead of refresh token provided.'},
                     status=status.HTTP_401_UNAUTHORIZED)
             except UserNotFoundError as e:
                 return Response(
