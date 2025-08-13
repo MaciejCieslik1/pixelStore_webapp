@@ -1,3 +1,5 @@
+import jwt
+from jwt import InvalidTokenError
 from rest_framework.exceptions import ValidationError
 
 class EmailAlreadyTakenError(ValidationError):
@@ -40,4 +42,19 @@ class TokenExpiredError(ValidationError):
     pass
 
 class CannotGetTokenFromRequestError(ValueError):
+    pass
+
+class IncorrectTokenError(InvalidTokenError):
+    pass
+
+class TokenExpiredByReplacementError(InvalidTokenError):
+    pass
+
+class RefreshTokenExpiredError(jwt.ExpiredSignatureError):
+    pass
+
+class InvalidRefreshTokenError(jwt.InvalidTokenError):
+    pass
+
+class TokenTypeMismatchError(ValueError):
     pass
