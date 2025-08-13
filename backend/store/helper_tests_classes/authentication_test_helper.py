@@ -7,7 +7,8 @@ import pytest
 
 from config import settings_test
 from store.models import User, UserPreferences, UserStatistics, Address, VerificationCode
-from store.service.authentication_service import RegisterService, LoginService, ResetPasswordService
+from store.service.authentication_service import RegisterService, LoginService, ResetPasswordService, \
+    VerifyAccountService
 
 
 class RegistrationTestsHelper:
@@ -89,9 +90,13 @@ class TokenTestsHelper:
 
 class AuthenticationHelper:
     @staticmethod
-    def register_user(user_data: dict):
+    def register_and_verify_user(user_data: dict):
         register_service = RegisterService()
         register_service.register_user(user_data)
+        verify_account_service = VerifyAccountService()
+        user = User.objects.get(username=user_data["username"])
+        user_data["code"] = user.verification_code.code
+        verify_account_service.verify_account(user_data)
 
     @staticmethod
     def login_user(user_data: dict) -> str:
@@ -101,7 +106,7 @@ class AuthenticationHelper:
 
     @staticmethod
     def register_and_login_user(user_data: dict) -> str:
-        AuthenticationHelper.register_user(user_data)
+        AuthenticationHelper.register_and_verify_user(user_data)
         return AuthenticationHelper.login_user(user_data)
 
     @staticmethod
