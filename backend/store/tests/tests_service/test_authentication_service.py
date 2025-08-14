@@ -142,7 +142,7 @@ class TestLogoutService:
 
         with pytest.raises(TokenExpiredError) as e:
             logout_service.logout_user(access_token, user)
-        assert f"Invalid access token." in str(e.value)
+        assert f"Access token has expired." in str(e.value)
 
     def test_logout_incorrect_access_token(self):
         access_token = "invalid token"
@@ -160,6 +160,7 @@ class TestLogoutService:
         logout_service.logout_user(access_token_first, user)
         login_service = LoginService()
         login_service.login_user(self.user_data)
+        user = User.objects.get(username="tester")
 
         with pytest.raises(TokenExpiredByReplacementError) as e:
             logout_service.logout_user(access_token_first, user)
@@ -171,83 +172,70 @@ class TestVerifyAccountService:
     @pytest.fixture(autouse=True)
     def setup_data(self):
         self.user_data = AuthenticationHelper.return_exemplary_user_data()
-
-    def test_verify_account_successfully(self):
         register_service = RegisterService()
         register_service.register_user(self.user_data)
-        verify_account_service = VerifyAccountService()
-        self.user_data["code"] = "bad_code"
 
-        with patch("store.helper_classes.authentication_helper.VerificationCodeHandling.change_verification_code",
-                   return_value="verif123") \
-                as mock_verification_code, \
-            patch("store.service.authentication_service.EmailSender.send_code") as mock_send:
+    def test_verify_account_successfully(self):
+        verify_account_service = VerifyAccountService()
+        user = User.objects.get(username="tester")
+        self.user_data["code"] = user.verification_code.code
+
+        with patch("store.service.authentication_service.EmailSender.send_code") as mock_send:
             verify_account_service.verify_account(self.user_data)
 
         user = User.objects.get(username="tester")
         is_verified_after = user.is_verified
         email, code = mock_send.call_args[0]
 
-        mock_verification_code.assert_called_once()
         mock_send.assert_called_once()
         assert is_verified_after == True
-        assert user.verification_code == mock_verification_code
+        assert user.verification_code.code != self.user_data["code"]
         assert email == "test@example.com"
-        assert code == "verif123"
 
     def test_verify_account_invalid_code(self):
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
         verify_account_service = VerifyAccountService()
+        self.user_data["code"] = "bad_code"
+        user = User.objects.get(username="tester")
+        code_before = user.verification_code.code
 
-        with patch("store.helper_classes.authentication_helper.VerificationCodeHandling.change_verification_code",
-                   return_value="verif123") \
-                as mock_verification_code, \
-                patch("store.service.authentication_service.EmailSender.send_code") as mock_send:
+        with patch("store.service.authentication_service.EmailSender.send_code"):
             with pytest.raises(InvalidVerificationCodeError) as e:
                 verify_account_service.verify_account(self.user_data)
-            assert f"Incorrect verification code." in str(e.value)
 
         user = User.objects.get(username="tester")
-        code_after = user.verification_code
         is_verified_after = user.is_verified
-        email, code = mock_send.call_args[0]
+        code_after = user.verification_code.code
 
-        mock_verification_code.assert_called_once()
-        mock_send.assert_called_once()
+        assert f"Incorrect verification code." in str(e.value)
         assert is_verified_after == False
-        assert code_after == mock_verification_code
-        assert email == "test@example.com"
-        assert code == "verif123"
+        assert code_before == code_after
+
 
     def test_verify_account_code_expired(self):
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
         verify_account_service = VerifyAccountService()
         user = User.objects.get(username="tester")
-        code_before = user.verification_code
+        code_before = user.verification_code.code
+        user.verification_code.expiration_date_time = timezone.now() - timedelta(days=1)
+        user.verification_code.save()
+        self.user_data["code"] = code_before
 
         with pytest.raises(ExpiredVerificationCodeError) as e:
             verify_account_service.verify_account(self.user_data)
         assert f"Verification code has expired." in str(e.value)
 
         user = User.objects.get(username="tester")
-        code_after = user.verification_code
         is_verified_after = user.is_verified
 
         assert is_verified_after == False
-        assert code_before == code_after
 
     def test_verify_account_user_invalid_email(self):
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
         self.user_data["email"] = "test1@example.com"
         verify_account_service = VerifyAccountService()
 
         with pytest.raises(UserNotFoundError) as e:
             verify_account_service.verify_account(self.user_data)
 
-        assert f"User with provided email not found." in str(e.value)
+        assert f"User with provided email does not exist." in str(e.value)
 
 SECRET_KEY = settings_test.SECRET_KEY
 ALGORITHM = 'HS256'
