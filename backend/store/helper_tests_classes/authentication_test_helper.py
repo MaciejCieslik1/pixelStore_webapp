@@ -8,7 +8,7 @@ import pytest
 from config import settings_test
 from store.models import User, UserPreferences, UserStatistics, Address, VerificationCode
 from store.service.authentication_service import RegisterService, LoginService, ResetPasswordService, \
-    VerifyAccountService
+    VerifyAccountService, ResendVerificationCodeService
 
 
 class RegistrationTestsHelper:
@@ -105,6 +105,12 @@ class AuthenticationHelper:
         return result["access_token"]
 
     @staticmethod
+    def login_user_return_refresh_token(user_data: dict) -> str:
+        login_service = LoginService()
+        result = login_service.login_user(user_data)
+        return result["refresh_token"]
+
+    @staticmethod
     def register_and_login_user(user_data: dict) -> str:
         AuthenticationHelper.register_and_verify_user(user_data)
         return AuthenticationHelper.login_user(user_data)
@@ -126,3 +132,17 @@ class ResetPasswordTestsHelper:
         with pytest.raises(exception) as e:
             reset_password_service.reset_password(access_token, data)
         assert f"{message}" in str(e.value)
+
+
+class ResendVerificationCodeTestsHelper:
+    @staticmethod
+    def handle_resend_verification_code_error(verification_code_before: str, access_token: str, data: dict,
+                                              exception: Type[BaseException], message: str):
+        resend_verification_code_service = ResendVerificationCodeService()
+        with pytest.raises(exception) as e:
+            resend_verification_code_service.resend_verification_code(access_token, data)
+        user = User.objects.get(username="tester")
+        verification_code_after = user.verification_code.code
+
+        assert f"{message}" in str(e.value)
+        assert verification_code_before == verification_code_after
