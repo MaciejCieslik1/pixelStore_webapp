@@ -9,7 +9,7 @@ from store.exceptions import UsernameAlreadyTakenError, EmailAlreadyTakenError, 
     TokenExpiredError, IncorrectTokenError, TokenExpiredByReplacementError, RefreshTokenExpiredError, \
     InvalidRefreshTokenError, TokenTypeMismatchError, PasswordsNotMatchError
 from store.helper_tests_classes.authentication_test_helper import RegistrationTestsHelper, LoginTestsHelper, \
-    AuthenticationHelper, TokenTestsHelper, ResetPasswordTestsHelper
+    AuthenticationHelper, TokenTestsHelper, ResetPasswordTestsHelper, ResendVerificationCodeTestsHelper
 from store.service.authentication_service import RegisterService, LoginService, VerifyAccountService, LogoutService, \
     VerifyTokenService, RefreshTokenService, ResetPasswordService, ResendVerificationCodeService
 from store.models import User, UserPreferences, UserStatistics, Address, VerificationCode
@@ -264,13 +264,10 @@ class TestRefreshTokenService:
     @pytest.fixture(autouse=True)
     def setup_data(self):
         self.user_data = AuthenticationHelper.return_exemplary_user_data()
+        AuthenticationHelper.register_and_verify_user(self.user_data)
 
     def test_refresh_access_token_successfully(self):
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
-        login_service = LoginService()
-        result = login_service.login_user(self.user_data)
-        data = {"refresh_token": result[1]}
+        data = {"refresh_token": AuthenticationHelper.login_user_return_refresh_token(self.user_data)}
         user = User.objects.get(username="tester")
         service = RefreshTokenService()
 
@@ -278,15 +275,11 @@ class TestRefreshTokenService:
         payload = jwt.decode(access_token, SECRET_KEY, algorithms=[ALGORITHM])
 
         assert user.user_id == payload.get("user_id")
-        assert "access_token" == payload.get("token_type")
+        assert "access" == payload.get("token_type")
         assert user.token_version == payload.get("token_version")
 
     def test_refresh_access_token_invalid_user_id(self):
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
-        login_service = LoginService()
-        result = login_service.login_user(self.user_data)
-        data = {"refresh_token": result[1]}
+        data = {"refresh_token": AuthenticationHelper.login_user_return_refresh_token(self.user_data)}
         service = RefreshTokenService()
 
         with patch("store.service.authentication_service.RefreshTokenService._get_user_id_from_refresh_token",
@@ -297,8 +290,6 @@ class TestRefreshTokenService:
         assert f"User with provided id not found." in str(e.value)
 
     def test_refresh_access_token_expired(self):
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
         user = User.objects.get(username="tester")
         data = {"refresh_token": TokenTestsHelper.generate_refresh_token(user.user_id,
                 "refresh", timezone.now() - timedelta(days=1), timezone.now() - timedelta(days=2))}
@@ -310,11 +301,7 @@ class TestRefreshTokenService:
         assert f"Refresh token has expired." in str(e.value)
 
     def test_refresh_access_token_invalid(self):
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
-        user = User.objects.get(username="tester")
-        data = {"refresh_token": TokenTestsHelper.generate_refresh_token(user.user_id + 10,
-                "refresh", timezone.now() + timedelta(days=1), timezone.now() - timedelta(days=2))}
+        data = {"refresh_token": "bad_token"}
         service = RefreshTokenService()
 
         with pytest.raises(InvalidRefreshTokenError) as e:
@@ -323,8 +310,6 @@ class TestRefreshTokenService:
         assert f"Refresh token is invalid." in str(e.value)
 
     def test_refresh_access_token_wrong_type(self):
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
         user = User.objects.get(username="tester")
         data = {"refresh_token": TokenTestsHelper.generate_refresh_token(user.user_id + 10,
                 "access", timezone.now() + timedelta(days=1), timezone.now() - timedelta(days=2))}
@@ -346,7 +331,7 @@ class TestResetPasswordService:
     def test_reset_password_successfully(self):
         reset_password_service = ResetPasswordService()
         user = User.objects.get(username="tester")
-        data = {"user": user, "code": user.verification_code, "password1": "aaaaa", "passsword2": "aaaaa"}
+        data = {"user": user, "code": user.verification_code.code, "password1": "aaaaa", "passsword2": "aaaaa"}
 
         reset_password_service.reset_password(self.access_token, data)
 
@@ -367,7 +352,7 @@ class TestResetPasswordService:
     def test_reset_password_expired_by_replacement_access_token(self):
         reset_password_service = ResetPasswordService()
         user = User.objects.get(username="tester")
-        data = {"user": user, "code": user.verification_code, "password1": "fdfddfffd", "passsword2": "fdfddfffd"}
+        data = {"user": user, "code": user.verification_code.code, "password1": "fdfddfffd", "passsword2": "fdfddfffd"}
         login_service = LoginService()
         login_service.login_user(self.user_data)
 
@@ -378,7 +363,7 @@ class TestResetPasswordService:
     def test_reset_password_invalid_verification_code(self):
         reset_password_service = ResetPasswordService()
         user = User.objects.get(username="tester")
-        data = {"user": user, "code": user.verification_code, "password1": "fdfddfffd", "password2": "fdfddfffd"}
+        data = {"user": user, "code": user.verification_code.code, "password1": "fdfddfffd", "password2": "fdfddfffd"}
 
         with pytest.raises(InvalidVerificationCodeError) as e:
             reset_password_service.reset_password(self.access_token, data)
@@ -387,7 +372,7 @@ class TestResetPasswordService:
     def test_reset_password_passwords_dont_match(self):
         reset_password_service = ResetPasswordService()
         user = User.objects.get(username="tester")
-        data = {"user": user, "code": user.verification_code, "password1": "aaaaa", "password2": "bbbbbb"}
+        data = {"user": user, "code": user.verification_code.code, "password1": "aaaaa", "password2": "bbbbbb"}
 
         with pytest.raises(PasswordsNotMatchError) as e:
             reset_password_service.reset_password(self.access_token, data)
@@ -416,8 +401,6 @@ class TestResendVerificationCodeService:
 
         assert verification_code_before != verification_code_after
 
-
-
     def test_resend_verification_code_expired_access_token(self):
         user = User.objects.get(username="tester")
         access_token = TokenTestsHelper.generate_access_token(user.user_id, "access",
@@ -434,36 +417,25 @@ class TestResendVerificationCodeService:
         user = User.objects.get(username="tester")
         verification_code_after = user.verification_code
 
-        assert f"Invalid access token." in str(e.value)
+        assert f"Access token has expired." in str(e.value)
         assert verification_code_before == verification_code_after
 
     def test_resend_verification_code_incorrect_access_token(self):
         access_token = "invalid token"
-        resend_verification_code_service = ResendVerificationCodeService()
         user = User.objects.get(username="tester")
-        verification_code_before = user.verification_code
+        verification_code_before = user.verification_code.code
         data = {"user": user}
 
-        with pytest.raises(IncorrectTokenError) as e:
-            resend_verification_code_service.resend_verification_code(access_token, data)
-        user = User.objects.get(username="tester")
-        verification_code_after = user.verification_code
-
-        assert f"Incorrect access token." in str(e.value)
-        assert verification_code_before == verification_code_after
+        ResendVerificationCodeTestsHelper.handle_resend_verification_code_error(verification_code_before,
+            access_token, data, IncorrectTokenError,"Incorrect access token.")
 
     def test_resend_verification_code_expired_by_replacement_access_token(self):
-        resend_verification_code_service = ResendVerificationCodeService()
         user = User.objects.get(username="tester")
-        verification_code_before = user.verification_code
-        data = {"user": user}
+        verification_code_before = user.verification_code.code
         login_service = LoginService()
         login_service.login_user(self.user_data)
-
-        with pytest.raises(TokenExpiredByReplacementError) as e:
-            resend_verification_code_service.resend_verification_code(self.access_token, data)
         user = User.objects.get(username="tester")
-        verification_code_after = user.verification_code
+        data = {"user": user}
 
-        assert f"Access token is no longer valid." in str(e.value)
-        assert verification_code_before == verification_code_after
+        ResendVerificationCodeTestsHelper.handle_resend_verification_code_error(verification_code_before,
+            self.access_token, data, TokenExpiredByReplacementError, "Access token is no longer valid.")
