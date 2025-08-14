@@ -113,8 +113,7 @@ class AuthenticationHelper:
     def return_exemplary_user_data() -> dict:
         return {"email": "test@example.com", "username": "tester", "password": "hashedpwd",
          "is_verified": False, "bio": "I'm new here!", "money": 0.00, "is_superuser": False,
-         "last_login": None,
-         "address": "fweffwe", "postal_code": "00001", "city": "Warsaw", "country": "Poland"}
+         "last_login": None, "address": "fweffwe", "postal_code": "00001", "city": "Warsaw", "country": "Poland"}
 
 
 class ResetPasswordTestsHelper:
