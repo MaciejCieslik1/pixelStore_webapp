@@ -28,7 +28,7 @@ class VerificationCodeHandling:
         verification_code.delete()
         verification_code = VerificationCode.create_verification_code(user)
         verification_code.save()
-        EmailSender.send_code(user.email, verification_code)
+        EmailSender.send_code(user.email, verification_code.code)
 
 
 class TokenGenerator:
