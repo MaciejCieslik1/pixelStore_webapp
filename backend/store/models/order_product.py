@@ -15,3 +15,12 @@ class OrderProduct(models.Model):
 
     def __str__(self):
         return "Shopping price: " + str(self.shopping_price)
+
+    def __eq__(self, other):
+        if not isinstance(other, OrderProduct):
+            return NotImplemented
+        return (self.transaction == other.transaction and self.product == other.product and
+            self.seller == other.seller and self.shopping_price == other.shopping_price)
+
+    def __hash__(self):
+        return hash((self.transaction, self.product, self.seller, self.shopping_price))

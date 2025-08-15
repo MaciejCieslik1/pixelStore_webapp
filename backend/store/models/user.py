@@ -37,3 +37,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         )
         user.set_password(data["password"])
         return user
+
+    def __eq__(self, other):
+        if not isinstance(other, User):
+            return NotImplemented
+        return (self.email == other.email and self.username == other.username and self.password == other.password
+            and self.is_verified == other.is_verified and self.bio == other.bio and self.money == other.money
+            and self.is_superuser == other.is_superuser and self.last_login == other.last_login
+            and self.token_version == other.token_version)
+
+    def __hash__(self):
+        return hash((self.email, self.username, self.password, self.is_verified, self.bio, self.money,
+            self.is_superuser, self.last_login, self.token_version))

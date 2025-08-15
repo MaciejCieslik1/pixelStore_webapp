@@ -30,3 +30,16 @@ class Product(models.Model):
 
     def __str__(self):
         return "Name: " + str(self)
+
+    def __eq__(self, other):
+        if not isinstance(other, Product):
+            return NotImplemented
+        return (self.owner == other.owner and self.name == other.name and self.description == other.description and
+                self.price == other.price and self.amount == other.amount and self.color == other.color and
+                self.weight == other.weight and self.length == other.length and self.width == other.width and
+                self.height == other.height and self.guarantee_period == other.guarantee_period and
+                self.status == other.status)
+
+    def __hash__(self):
+        return hash((self.owner, self.name, self.description, self.price, self.amount, self.color, self.weight,
+                self.length, self.width, self.height, self.guarantee_period, self.status))

@@ -2,6 +2,8 @@ from datetime import timedelta
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from jwt import ExpiredSignatureError
+
 from ..exceptions import *
 from ..models import User, VerificationCode
 import uuid
@@ -14,8 +16,6 @@ ALGORITHM = 'HS256'
 class VerificationCodeHandling:
     @staticmethod
     def check_verification_code_credentials(user: User, input_code: str):
-        if not hasattr(user, 'verification_code'):
-            raise NoVerificationCodeFoundError("No verification code found.")
         if user.verification_code.code != input_code:
             raise InvalidVerificationCodeError("Incorrect verification code.")
         if user.verification_code.expiration_date_time < timezone.now():
@@ -28,7 +28,7 @@ class VerificationCodeHandling:
         verification_code.delete()
         verification_code = VerificationCode.create_verification_code(user)
         verification_code.save()
-        EmailSender.send_code(user.email, verification_code)
+        EmailSender.send_code(user.email, verification_code.code)
 
 
 class TokenGenerator:
@@ -70,10 +70,14 @@ class EmailSender:
 class TokenUtils:
     @staticmethod
     def verify_access_token(token: str, user: User):
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-
-        if payload['token_version'] != user.token_version:
-            raise TokenExpiredError("Access token is no longer valid.")
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        except ExpiredSignatureError:
+            raise TokenExpiredError("Access token has expired.")
+        except InvalidTokenError:
+            raise IncorrectTokenError("Incorrect access token.")
+        if payload.get('token_version') != user.token_version:
+            raise TokenExpiredByReplacementError("Access token is no longer valid.")
 
     @staticmethod
     def get_jwt_token_from_request(request):

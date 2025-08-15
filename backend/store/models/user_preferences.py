@@ -19,3 +19,11 @@ class UserPreferences(models.Model):
             user=user,
             dark_mode=False
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, UserPreferences):
+            return NotImplemented
+        return self.user == other.user and self.dark_mode == other.dark_mode
+
+    def __hash__(self):
+        return hash((self.user, self.dark_mode))

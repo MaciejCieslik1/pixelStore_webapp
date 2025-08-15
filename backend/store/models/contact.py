@@ -11,3 +11,11 @@ class Contact(models.Model):
 
     def __str__(self):
         return "Sender: " + str(self.sender.id) + ", receiver: " + str(self.receiver.id)
+
+    def __eq__(self, other):
+        if not isinstance(other, Contact):
+            return NotImplemented
+        return self.sender == other.sender and self.receiver == other.receiver
+
+    def __hash__(self):
+        return hash((self.sender, self.receiver))

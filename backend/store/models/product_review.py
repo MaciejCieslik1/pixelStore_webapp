@@ -15,3 +15,13 @@ class ProductReview(models.Model):
 
     def __str__(self):
         return "Rating: " + str(self.rating)
+
+    def __eq__(self, other):
+        if not isinstance(other, ProductReview):
+            return NotImplemented
+        return (self.product == other.product and self.rating == other.rating and
+                self.description == other.description and self.reviewer == other.reviewer and
+                self.review_date == other.review_date)
+
+    def __hash__(self):
+        return hash((self.product, self.rating, self.description, self.reviewer, self.review_date))

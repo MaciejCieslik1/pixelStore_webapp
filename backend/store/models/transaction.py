@@ -15,3 +15,12 @@ class Transaction(models.Model):
 
     def __str__(self):
         return "Total price: " + str(self.total_price)
+
+    def __eq__(self, other):
+        if not isinstance(other, Transaction):
+            return NotImplemented
+        return (self.buyer == other.buyer and self.total_price == other.total_price and
+            self.date_time == other.date_time and self.is_finished == other.is_finished)
+
+    def __hash__(self):
+        return hash((self.buyer, self.total_price, self.date_time, self.is_finished))

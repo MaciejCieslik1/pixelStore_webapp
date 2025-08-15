@@ -9,7 +9,7 @@ import jwt
 
 class RegisterService:
     def register_user(self, data: dict) -> str:
-        self.check_if_email_or_username_occupied(data)
+        self._check_if_email_or_username_occupied(data)
 
         user = User.create_user(data)
         user_preferences = UserPreferences.create_user_preferences(user)
@@ -28,7 +28,7 @@ class RegisterService:
 
         return f"User {user.username} registered successfully"
 
-    def check_if_email_or_username_occupied(self, data: dict):
+    def _check_if_email_or_username_occupied(self, data: dict):
         if User.objects.filter(email=data["email"]).exists():
             raise EmailAlreadyTakenError("User with this email already exists.")
         if User.objects.filter(username=data["username"]).exists():
@@ -37,7 +37,7 @@ class RegisterService:
 
 class LoginService:
     def login_user(self, data: dict) -> dict:
-        user = self.verify_user(data)
+        user = self._verify_user(data)
         user.token_version += 1
         user.save()
         return {
@@ -45,38 +45,31 @@ class LoginService:
             'refresh_token': TokenGenerator.generate_refresh_token(user)
         }
 
-    def verify_user(self, data: dict) -> User:
+    def _verify_user(self, data: dict) -> User:
         email = data.get('email')
         password = data.get('password')
 
-        self.check_if_email_and_username_are_not_empty(email, password)
-        user = self.find_user_if_exists(email)
-        self.check_password_correctness(password, user.password) # user.password is hashed password
+        user = self._find_user_if_exists(email)
+        self._check_password_correctness(password, user.password) # user.password is hashed password
 
         if user.is_verified is False:
             raise UserNotVerifiedError("User not verified.")
 
         return user
 
-    def check_if_email_and_username_are_not_empty(self, email: str, password: str):
-        if email is None:
-            raise MissingEmailError("Email is missing.")
-        if password is None:
-            raise MissingPasswordError("Password is missing.")
-
-    def find_user_if_exists(self, email: str) -> User:
+    def _find_user_if_exists(self, email: str) -> User:
         try:
             return User.objects.get(email=email)
         except User.DoesNotExist:
             raise UserNotFoundError("User with provided email not found.")
 
-    def check_password_correctness(self, password: str, password_hash: str):
+    def _check_password_correctness(self, password: str, password_hash: str):
         if not check_password(password, password_hash):
             raise InvalidPasswordError("Invalid password.")
 
 
 class LogoutService:
-    def logout_user(self,token: str, user: User) -> str:
+    def logout_user(self, token: str, user: User) -> str:
         TokenUtils.verify_access_token(token, user)
         return "User successfully logged out."
 
@@ -104,21 +97,29 @@ class VerifyTokenService:
 
 class RefreshTokenService:
     def refresh_access_token(self, data: dict) -> str:
-        user_id = self.get_user_id_from_refresh_token(data)
+        user_id = self._get_user_id_from_refresh_token(data)
         try:
             user = User.objects.get(user_id=user_id)
         except User.DoesNotExist:
             raise UserNotFoundError("User with provided id not found.")
         return TokenGenerator.generate_access_token(user)
 
-    def get_user_id_from_refresh_token(self, data: dict) -> int:
+    def _get_user_id_from_refresh_token(self, data: dict) -> int:
         refresh_token = data.get('refresh_token')
-        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        try:
+            payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        except jwt.ExpiredSignatureError:
+            raise RefreshTokenExpiredError("Refresh token has expired.")
+        except jwt.InvalidTokenError:
+            raise InvalidRefreshTokenError("Refresh token is invalid.")
+        if payload.get("token_type") != "refresh":
+            raise TokenTypeMismatchError("Provided token is not a refresh token.")
         return payload.get('user_id')
 
 
 class ResetPasswordService:
-    def reset_password(self, token: str, user: User, data: dict):
+    def reset_password(self, token: str, data: dict):
+        user = data["user"]
         TokenUtils.verify_access_token(token, user)
         if data["code"] != user.verification_code.code:
             raise InvalidVerificationCodeError("Incorrect verification code.")
@@ -132,6 +133,7 @@ class ResetPasswordService:
 
 
 class ResendVerificationCodeService:
-    def resend_verification_code(self, token: str, user: User):
+    def resend_verification_code(self, token: str, data: dict):
+        user = data["user"]
         TokenUtils.verify_access_token(token, user)
         VerificationCodeHandling.change_verification_code(user)
