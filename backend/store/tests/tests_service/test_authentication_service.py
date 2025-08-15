@@ -158,8 +158,7 @@ class TestLogoutService:
         logout_service = LogoutService()
         user = User.objects.get(username="tester")
         logout_service.logout_user(access_token_first, user)
-        login_service = LoginService()
-        login_service.login_user(self.user_data)
+        AuthenticationHelper.login_user(self.user_data)
         user = User.objects.get(username="tester")
 
         with pytest.raises(TokenExpiredByReplacementError) as e:
@@ -331,7 +330,7 @@ class TestResetPasswordService:
     def test_reset_password_successfully(self):
         reset_password_service = ResetPasswordService()
         user = User.objects.get(username="tester")
-        data = {"user": user, "code": user.verification_code.code, "password1": "aaaaa", "passsword2": "aaaaa"}
+        data = {"user": user, "code": user.verification_code.code, "password1": "aaaaa", "password2": "aaaaa"}
 
         reset_password_service.reset_password(self.access_token, data)
 
@@ -342,7 +341,7 @@ class TestResetPasswordService:
                                                               timezone.now() - timedelta(days=2),
                                                               token_version=1)
         ResetPasswordTestsHelper.handle_access_token_error(access_token, TokenExpiredError,
-                                                           "Invalid access token.")
+                                                           "Access token has expired.")
 
     def test_reset_password_incorrect_access_token(self):
         access_token = "invalid token"
@@ -351,10 +350,10 @@ class TestResetPasswordService:
 
     def test_reset_password_expired_by_replacement_access_token(self):
         reset_password_service = ResetPasswordService()
-        user = User.objects.get(username="tester")
-        data = {"user": user, "code": user.verification_code.code, "password1": "fdfddfffd", "passsword2": "fdfddfffd"}
         login_service = LoginService()
         login_service.login_user(self.user_data)
+        user = User.objects.get(username="tester")
+        data = {"user": user, "code": user.verification_code.code, "password1": "fdfddfffd", "password2": "fdfddfffd"}
 
         with pytest.raises(TokenExpiredByReplacementError) as e:
             reset_password_service.reset_password(self.access_token, data)
@@ -363,7 +362,7 @@ class TestResetPasswordService:
     def test_reset_password_invalid_verification_code(self):
         reset_password_service = ResetPasswordService()
         user = User.objects.get(username="tester")
-        data = {"user": user, "code": user.verification_code.code, "password1": "fdfddfffd", "password2": "fdfddfffd"}
+        data = {"user": user, "code": "bad_code", "password1": "fdfddfffd", "password2": "fdfddfffd"}
 
         with pytest.raises(InvalidVerificationCodeError) as e:
             reset_password_service.reset_password(self.access_token, data)
@@ -430,12 +429,18 @@ class TestResendVerificationCodeService:
             access_token, data, IncorrectTokenError,"Incorrect access token.")
 
     def test_resend_verification_code_expired_by_replacement_access_token(self):
+        access_token_first = self.access_token
+        logout_service = LogoutService()
+        user = User.objects.get(username="tester")
+        logout_service.logout_user(access_token_first, user)
+        old_token_version = user.token_version
+        AuthenticationHelper.login_user(self.user_data)
         user = User.objects.get(username="tester")
         verification_code_before = user.verification_code.code
-        login_service = LoginService()
-        login_service.login_user(self.user_data)
-        user = User.objects.get(username="tester")
         data = {"user": user}
 
         ResendVerificationCodeTestsHelper.handle_resend_verification_code_error(verification_code_before,
-            self.access_token, data, TokenExpiredByReplacementError, "Access token is no longer valid.")
+            access_token_first, data, TokenExpiredByReplacementError, "Access token is no longer valid.")
+
+        user = User.objects.get(username="tester")
+        assert old_token_version != user.token_version
