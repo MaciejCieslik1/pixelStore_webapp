@@ -128,7 +128,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"username": ["Username needs at least 3 characters."]})
+        self.assertEqual(serializer.errors, {"username": ["Username must be between 3 and 16 characters."]})
 
     def test_register_incorrect_too_long_username(self):
         self.data["username"] = "aaaaaaaaaaaaaaaaa"
@@ -138,7 +138,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"username": ["Username cannot be longer than 16 characters."]})
+        self.assertEqual(serializer.errors, {"username": ["Username must be between 3 and 16 characters."]})
 
     def test_register_incorrect_no_email(self):
         self.data["email"] = ""
@@ -158,7 +158,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": ["Email cannot be longer than 64 characters."]})
+        self.assertEqual(serializer.errors, {"email": ["Email is not valid."]})
 
     def test_register_incorrect_no_email_local_part(self):
         self.data["email"] = "@gmail.com"
@@ -168,7 +168,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": ["Email needs local part (before @)."]})
+        self.assertEqual(serializer.errors, {"email": ["Email is not valid."]})
 
     def test_register_incorrect_no_email_domain_part(self):
         self.data["email"] = "tester@.com"
@@ -178,7 +178,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": ["Email needs domain part (after @)."]})
+        self.assertEqual(serializer.errors, {"email": ["Email is not valid."]})
 
     def test_register_incorrect_no_email_ending_part(self):
         self.data["email"] = "tester@gmail"
@@ -220,6 +220,17 @@ class TestRegisterSerializer(unittest.TestCase):
         self.assertNotEqual(serializer.validated_data, self.validated_data)
         self.assertEqual(serializer.errors, {"password": ["Password cannot be longer than 64 characters."]})
 
+    def test_register_incorrect_password_has_no_small_letter(self):
+        self.data["password"] = "TESTTTT9#"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": ["Password needs at least one small letter, \
+                                                          capital letter, digit and special character."]})
+
     def test_register_incorrect_password_has_no_capital_letter(self):
         self.data["password"] = "testtt9#"
         serializer = RegisterSerializer(data=self.data)
@@ -228,7 +239,8 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password needs at least one special character."]})
+        self.assertEqual(serializer.errors, {"password": ["Password needs at least one small letter, \
+                                                          capital letter, digit and special character."]})
 
     def test_register_incorrect_password_has_no_digits(self):
         self.data["password"] = "testRRR#"
@@ -238,7 +250,8 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password needs at least one digit."]})
+        self.assertEqual(serializer.errors, {"password": ["Password needs at least one small letter, \
+                                                          capital letter, digit and special character."]})
 
     def test_register_incorrect_password_has_no_special_character(self):
         self.data["password"] = "testRRR9"
@@ -248,7 +261,8 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password needs at least one special character."]})
+        self.assertEqual(serializer.errors, {"password": ["Password needs at least one small letter, \
+                                                          capital letter, digit and special character."]})
 
     def test_register_incorrect_no_address(self):
         self.data["address"] = ""
@@ -288,7 +302,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"postal_code": ["country is not provided."]})
+        self.assertEqual(serializer.errors, {"postal_code": ["Postal code is not provided."]})
 
     def test_register_incorrect_too_short_postal_code(self):
         self.data["postal_code"] = "0001"
