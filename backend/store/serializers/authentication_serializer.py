@@ -169,7 +169,6 @@ class RegisterSerializer:
         return self._has_place_only_letters(country, "country")
 
 
-
 class LoginSerializer:
     def __init__(self, data: dict):
         self._data = data
@@ -189,7 +188,16 @@ class LoginSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return False
+        return self._validate_field("email") and self._validate_field("password")
+
+    def _validate_field(self, field: str) -> bool:
+        field_value = self.data.get(field)
+        if field_value is None or not field_value.strip():
+            self.errors[field] = f"{field.capitalize()} is not provided."
+            return False
+        field_value = field_value.strip()
+        self.validated_data[field] = field_value
+        return True
 
 
 class AccountVerificationSerializer:
