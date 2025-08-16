@@ -90,5 +90,4 @@ class TokenUtils:
 class DataValidator:
     @staticmethod
     def validate_length(string: str, min_length: int, max_length: int) -> bool:
-        string = string.strip()
         return min_length <= len(string) <= max_length
