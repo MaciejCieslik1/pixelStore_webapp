@@ -21,6 +21,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
     def test_register_correct_data_max_username_edge_case(self):
         self.data["username"] = "aaaaaaaaaaaaaaaa"
+        self.validated_data["username"] = "aaaaaaaaaaaaaaaa"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -31,6 +32,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
     def test_register_correct_data_min_username_edge_case(self):
         self.data["username"] = "aaa"
+        self.validated_data["username"] = "aaa"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -41,6 +43,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
     def test_register_correct_data_min_password_edge_case(self):
         self.data["password"] = "testtR9#"
+        self.validated_data["password"] = "testtR9#"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -51,6 +54,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
     def test_register_correct_data_max_password_edge_case(self):
         self.data["password"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        self.validated_data["password"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -60,7 +64,8 @@ class TestRegisterSerializer(unittest.TestCase):
         self.assertEqual(serializer.errors, {})
 
     def test_register_correct_data_max_email_edge_case(self):
-        self.data["email"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@gmail.com"
+        self.data["email"] = "testtR9aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@gmail.com"
+        self.validated_data["email"] = "testtR9aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@gmail.com"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -71,6 +76,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
     def test_register_correct_data_max_address_edge_case(self):
         self.data["address"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        self.validated_data["address"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -81,6 +87,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
     def test_register_correct_data_max_city_edge_case(self):
         self.data["city"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        self.validated_data["city"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -91,6 +98,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
     def test_register_correct_data_max_country_edge_case(self):
         self.data["country"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        self.validated_data["country"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -118,7 +126,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"username": ["Username is not provided."]})
+        self.assertEqual(serializer.errors, {"username": "Username is not provided."})
 
     def test_register_incorrect_too_short_username(self):
         self.data["username"] = "aa"
@@ -128,7 +136,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"username": ["Username must be between 3 and 16 characters."]})
+        self.assertEqual(serializer.errors, {"username": "Username must be between 3 and 16 characters."})
 
     def test_register_incorrect_too_long_username(self):
         self.data["username"] = "aaaaaaaaaaaaaaaaa"
@@ -138,7 +146,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"username": ["Username must be between 3 and 16 characters."]})
+        self.assertEqual(serializer.errors, {"username": "Username must be between 3 and 16 characters."})
 
     def test_register_incorrect_no_email(self):
         self.data["email"] = ""
@@ -148,17 +156,17 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": ["Email is not provided."]})
+        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
 
     def test_register_incorrect_email_too_long(self):
-        self.data["password"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@gmail.com"
+        self.data["email"] = "testtR9aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@gmail.com"
         serializer = RegisterSerializer(data=self.data)
 
         result = serializer.is_valid()
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": ["Email is not valid."]})
+        self.assertEqual(serializer.errors, {"email": "Email must have maximum 64 characters."})
 
     def test_register_incorrect_no_email_local_part(self):
         self.data["email"] = "@gmail.com"
@@ -168,7 +176,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": ["Email is not valid."]})
+        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
 
     def test_register_incorrect_no_email_domain_part(self):
         self.data["email"] = "tester@.com"
@@ -178,7 +186,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": ["Email is not valid."]})
+        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
 
     def test_register_incorrect_no_email_ending_part(self):
         self.data["email"] = "tester@gmail"
@@ -188,7 +196,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": ["Email needs ending part (after domain)."]})
+        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
 
     def test_register_incorrect_no_password(self):
         self.data["password"] = ""
@@ -198,7 +206,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password is not provided."]})
+        self.assertEqual(serializer.errors, {"password": "Password is not provided."})
 
     def test_register_incorrect_password_too_short(self):
         self.data["password"] = "testR9#"
@@ -208,7 +216,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password needs at least 8 characters."]})
+        self.assertEqual(serializer.errors, {"password": "Password must be between 8 and 64 characters."})
 
     def test_register_incorrect_password_too_long(self):
         self.data["password"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -218,7 +226,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password cannot be longer than 64 characters."]})
+        self.assertEqual(serializer.errors, {"password": "Password must be between 8 and 64 characters."})
 
     def test_register_incorrect_password_has_no_small_letter(self):
         self.data["password"] = "TESTTTT9#"
@@ -228,8 +236,8 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password needs at least one small letter, \
-                                                          capital letter, digit and special character."]})
+        self.assertEqual(serializer.errors, {"password": "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."})
 
     def test_register_incorrect_password_has_no_capital_letter(self):
         self.data["password"] = "testtt9#"
@@ -239,8 +247,8 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password needs at least one small letter, \
-                                                          capital letter, digit and special character."]})
+        self.assertEqual(serializer.errors, {"password": "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."})
 
     def test_register_incorrect_password_has_no_digits(self):
         self.data["password"] = "testRRR#"
@@ -250,8 +258,8 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password needs at least one small letter, \
-                                                          capital letter, digit and special character."]})
+        self.assertEqual(serializer.errors, {"password": "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."})
 
     def test_register_incorrect_password_has_no_special_character(self):
         self.data["password"] = "testRRR9"
@@ -261,8 +269,8 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"password": ["Password needs at least one small letter, \
-                                                          capital letter, digit and special character."]})
+        self.assertEqual(serializer.errors, {"password": "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."})
 
     def test_register_incorrect_no_address(self):
         self.data["address"] = ""
@@ -272,7 +280,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"address": ["Address is not provided."]})
+        self.assertEqual(serializer.errors, {"address": "Address is not provided."})
 
     def test_register_incorrect_too_long_address(self):
         self.data["address"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -282,7 +290,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"address": ["Address cannot be longer than 64 characters."]})
+        self.assertEqual(serializer.errors, {"address": "Address cannot be longer than 64 characters."})
 
     def test_register_incorrect_address_other_characters(self):
         self.data["address"] = "aaaaaa3fdf"
@@ -292,7 +300,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"address": ["Address should contain only letters."]})
+        self.assertEqual(serializer.errors, {"address": "Address should contain only letters."})
 
     def test_register_incorrect_no_postal_code(self):
         self.data["postal_code"] = ""
@@ -302,7 +310,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"postal_code": ["Postal code is not provided."]})
+        self.assertEqual(serializer.errors, {"postal_code": "Postal code is not provided."})
 
     def test_register_incorrect_too_short_postal_code(self):
         self.data["postal_code"] = "0001"
@@ -312,7 +320,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"postal_code": ["Postal code must have exactly 5 digits."]})
+        self.assertEqual(serializer.errors, {"postal_code": "Postal code must have exactly 5 digits."})
 
     def test_register_incorrect_too_long_postal_code(self):
         self.data["postal_code"] = "000001"
@@ -322,7 +330,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"postal_code": ["Postal code must have exactly 5 digits."]})
+        self.assertEqual(serializer.errors, {"postal_code": "Postal code must have exactly 5 digits."})
 
     def test_register_incorrect_not_digit(self):
         self.data["postal_code"] = "00a01"
@@ -332,7 +340,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"postal_code": ["Postal must consist of exactly 5 digits."]})
+        self.assertEqual(serializer.errors, {"postal_code": "Postal must consist of exactly 5 digits."})
 
     def test_register_incorrect_no_city(self):
         self.data["city"] = ""
@@ -342,7 +350,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"city": ["City is not provided."]})
+        self.assertEqual(serializer.errors, {"city": "City is not provided."})
 
     def test_register_incorrect_too_long_city(self):
         self.data["city"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -352,7 +360,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"city": ["City cannot be longer than 64 characters."]})
+        self.assertEqual(serializer.errors, {"city": "City cannot be longer than 64 characters."})
 
     def test_register_incorrect_city_other_characters(self):
         self.data["city"] = "aaaaaa3fdf"
@@ -362,7 +370,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"city": ["City should contain only letters."]})
+        self.assertEqual(serializer.errors, {"city": "City should contain only letters."})
 
     def test_register_incorrect_no_country(self):
         self.data["country"] = ""
@@ -372,7 +380,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"country": ["country is not provided."]})
+        self.assertEqual(serializer.errors, {"country": "Country is not provided."})
 
     def test_register_incorrect_too_long_country(self):
         self.data["country"] = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -382,7 +390,7 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"country": ["Country cannot be longer than 64 characters."]})
+        self.assertEqual(serializer.errors, {"country": "Country cannot be longer than 64 characters."})
 
     def test_register_incorrect_country_other_characters(self):
         self.data["country"] = "aaaaaa3fdf"
@@ -392,5 +400,5 @@ class TestRegisterSerializer(unittest.TestCase):
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"country": ["Country should contain only letters."]})
+        self.assertEqual(serializer.errors, {"country": "Country should contain only letters."})
 
