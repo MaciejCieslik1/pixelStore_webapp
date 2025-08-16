@@ -1,6 +1,6 @@
 import unittest
 
-from store.serializers.authentication_serializer import RegisterSerializer
+from store.serializers.authentication_serializer import RegisterSerializer, LoginSerializer
 
 
 class TestRegisterSerializer(unittest.TestCase):
@@ -401,4 +401,72 @@ class TestRegisterSerializer(unittest.TestCase):
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
         self.assertEqual(serializer.errors, {"country": "Country should contain only letters."})
+
+
+class TestLoginSerializer(unittest.TestCase):
+    def setUp(self):
+        self.data = {"email": "test@example.com", "password": "Abcdefg1#abc"}
+        self.validated_data = {"email": "test@example.com", "password": "Abcdefg1#abc"}
+
+    def test_login_correct_data(self):
+        serializer = LoginSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_login_correct_data_delete_spaces(self):
+        self.data = {"email": "     test@example.com     ", "password": "    Abcdefg1#abc   "}
+        self.validated_data = {"email": "test@example.com", "password": "Abcdefg1#abc"}
+        serializer = LoginSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_login_incorrect_data_empty_email(self):
+        self.data = {"email": "", "password": "Abcdefg1#abc"}
+        serializer = LoginSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
+
+    def test_login_incorrect_data_none_email(self):
+        self.data = {"email": "", "password": "Abcdefg1#abc"}
+        self.validated_data = {"email": None, "password": "Abcdefg1#abc"}
+        serializer = LoginSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
+
+    def test_login_incorrect_data_empty_password(self):
+        self.data = {"email": "test@example.com", "password": ""}
+        serializer = LoginSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": "Password is not provided."})
+
+    def test_login_incorrect_data_none_password(self):
+        self.data = {"email": "test@example.com", "password": None}
+        serializer = LoginSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": "Password is not provided."})
+
 
