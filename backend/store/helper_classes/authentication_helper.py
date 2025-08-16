@@ -85,3 +85,10 @@ class TokenUtils:
         if auth_header.startswith('Bearer '):
             return auth_header[len('Bearer '):]
         raise CannotGetTokenFromRequestError("Cannot get token from http request.")
+
+
+class DataValidator:
+    @staticmethod
+    def validate_length(string: str, min_length: int, max_length: int) -> bool:
+        string = string.strip()
+        return min_length <= len(string) <= max_length
