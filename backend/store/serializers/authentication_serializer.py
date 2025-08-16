@@ -31,7 +31,7 @@ class RegisterSerializer:
         max_length = 16
         username = self.data.get("username")
 
-        if username is None:
+        if username is None or not username.strip():
             self.errors["username"] = "Username is not provided."
             return False
         username = username.strip()
@@ -47,7 +47,7 @@ class RegisterSerializer:
         max_length = 64
         email = self.data.get("email")
 
-        if email is None:
+        if email is None or not email.strip():
             self.errors["email"] = "Email is not provided."
             return False
         email = email.strip()
@@ -70,7 +70,7 @@ class RegisterSerializer:
         max_length = 64
         password = self.data.get("password")
 
-        if password is None:
+        if password is None or not password.strip():
             self.errors["password"] = "Password is not provided."
             return False
         password = password.strip()
@@ -90,8 +90,8 @@ class RegisterSerializer:
         if has_digit and has_small_letter and has_capital_letter and has_special_character:
             return True
         else:
-            self.errors["password"] = "Password needs at least one small letter, capital letter, digit and \
-                                        special character."
+            self.errors["password"] = "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."
             return False
 
     def _validate_address(self) -> bool:
@@ -99,7 +99,7 @@ class RegisterSerializer:
         max_length = 64
         address = self.data.get("address")
 
-        if address is None:
+        if address is None or not address.strip():
             self.errors["address"] = "Address is not provided."
             return False
         address = address.strip()
@@ -119,7 +119,7 @@ class RegisterSerializer:
     def _validate_postal_code(self) -> bool:
         postal_code = self.data.get("postal_code")
 
-        if postal_code is None:
+        if postal_code is None or not postal_code.strip():
             self.errors["postal_code"] = "Postal code is not provided."
             return False
         postal_code = postal_code.strip()
@@ -141,7 +141,7 @@ class RegisterSerializer:
         max_length = 64
         city = self.data.get("city")
 
-        if city is None:
+        if city is None or not city.strip():
             self.errors["city"] = "City is not provided."
             return False
         city = city.strip()
@@ -157,7 +157,7 @@ class RegisterSerializer:
         max_length = 64
         country = self.data.get("country")
 
-        if country is None:
+        if country is None or not country.strip():
             self.errors["country"] = "Country is not provided."
             return False
         country = country.strip()
