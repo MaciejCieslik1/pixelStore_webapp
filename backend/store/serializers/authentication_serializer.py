@@ -14,7 +14,7 @@ class RegisterSerializer:
 
     @property
     def errors(self):
-        return self.errors
+        return self._errors
 
     def is_valid(self) -> bool:
         return False
@@ -36,7 +36,7 @@ class LoginSerializer:
 
     @property
     def errors(self):
-        return self.errors
+        return self._errors
 
     def is_valid(self) -> bool:
         return False
@@ -58,7 +58,7 @@ class AccountVerificationSerializer:
 
     @property
     def errors(self):
-        return self.errors
+        return self._errors
 
     def is_valid(self) -> bool:
         return False
@@ -80,7 +80,7 @@ class TokenVerificationSerializer:
 
     @property
     def errors(self):
-        return self.errors
+        return self._errors
 
     def is_valid(self) -> bool:
         return False
@@ -102,7 +102,7 @@ class RefreshTokenSerializer:
 
     @property
     def errors(self):
-        return self.errors
+        return self._errors
 
     def is_valid(self) -> bool:
         return False
@@ -124,7 +124,7 @@ class ResetPasswordSerializer:
 
     @property
     def errors(self):
-        return self.errors
+        return self._errors
 
     def is_valid(self) -> bool:
         return False
@@ -146,7 +146,7 @@ class ResendVerificationCodeSerializer:
 
     @property
     def errors(self):
-        return self.errors
+        return self._errors
 
     def is_valid(self) -> bool:
         return False
