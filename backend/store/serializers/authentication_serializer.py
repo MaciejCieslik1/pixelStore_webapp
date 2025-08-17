@@ -262,7 +262,13 @@ class TokenVerificationSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return False
+        token = self.data.get("token")
+        if token is None or not token.strip():
+            self.errors["token"] = "Token is not provided."
+            return False
+        token = token.strip()
+        self.validated_data["token"] = token
+        return True
 
 
 class RefreshTokenSerializer:
