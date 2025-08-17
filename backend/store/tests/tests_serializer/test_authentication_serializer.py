@@ -1,8 +1,10 @@
 import unittest
 
+from django.core.serializers import serialize
+
 from store.helper_tests_classes.authentication_test_helper import AuthenticationHelper
 from store.serializers.authentication_serializer import RegisterSerializer, LoginSerializer, \
-    AccountVerificationSerializer
+    AccountVerificationSerializer, TokenVerificationSerializer
 
 
 class TestRegisterSerializer(unittest.TestCase):
@@ -554,3 +556,48 @@ class TestVerifyAccountSerializer(unittest.TestCase):
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
         self.assertEqual(serializer.errors, {"verification_code": "Verification code is not provided."})
+
+
+class TestVerifyTokenSerializer(unittest.TestCase):
+    def setUp(self):
+        self.data = {"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjMsImV4cCI6MTcwMDAwMDAwMH0.4B1D8eK6G7fG3Zx1y2A3hI5L6J7K8L9M0N1O2P3Q4R5"}
+        self.validated_data = {"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMjMsImV4cCI6MTcwMDAwMDAwMH0.4B1D8eK6G7fG3Zx1y2A3hI5L6J7K8L9M0N1O2P3Q4R5"}
+
+    def test_verify_token_correct_data(self):
+        serializer = TokenVerificationSerializer(self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_verify_token_correct_data_delete_spaces(self):
+        self.data = {"token": "    " + self.data["token"] + "   "}
+        serializer = TokenVerificationSerializer(self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_verify_token_incorrect_empty_token(self):
+        self.data = {"token": ""}
+        serializer = TokenVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"token": "Token is not provided."})
+
+    def test_verify_token_incorrect_none_token(self):
+        self.data = {"token": None}
+        serializer = TokenVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"token": "Token is not provided."})
