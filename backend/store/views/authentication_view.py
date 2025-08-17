@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from ..serializers.authentication_serializer import RegisterSerializer, LoginSerializer, AccountVerificationSerializer, \
-    TokenVerificationSerializer, RefreshTokenSerializer, ResetPasswordSerializer, ResendVerificationCodeSerializer
+    TokenVerificationSerializer, ResetPasswordSerializer, ResendVerificationCodeSerializer
 from ..service.authentication_service import *
 import jwt
 
@@ -198,7 +198,7 @@ class RefreshTokenView(APIView):
         return self._refresh_token_service
 
     def post(self, request: Request) -> Response:
-        serializer = RefreshTokenSerializer(data=request.data)
+        serializer = TokenVerificationSerializer(data=request.data)
         if serializer.is_valid():
             try:
                 access_token = self.refresh_token_service.refresh_access_token(serializer.validated_data)
@@ -247,10 +247,10 @@ class ResetPasswordView(APIView):
         return self._reset_password_service
 
     def post(self, request: Request) -> Response:
-        serializer = ResetPasswordSerializer(data=request.data)
+        serializer = ResetPasswordSerializer(data=request.data, user=request.user)
         if serializer.is_valid():
             try:
-                token = TokenUtils.get_jwt_token_from_request(serializer.validated_data)
+                token = TokenUtils.get_jwt_token_from_request(request)
                 self.reset_password_service.reset_password(token, serializer.validated_data)
                 return Response({"msg": "Password changed successfully."}, status=status.HTTP_200_OK)
             except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
