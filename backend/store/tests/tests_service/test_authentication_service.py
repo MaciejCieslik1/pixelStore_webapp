@@ -171,8 +171,7 @@ class TestVerifyAccountService:
     @pytest.fixture(autouse=True)
     def setup_data(self):
         self.user_data = AuthenticationHelper.return_exemplary_user_data()
-        register_service = RegisterService()
-        register_service.register_user(self.user_data)
+        AuthenticationHelper.register_user(self.user_data)
 
     def test_verify_account_successfully(self):
         verify_account_service = VerifyAccountService()
