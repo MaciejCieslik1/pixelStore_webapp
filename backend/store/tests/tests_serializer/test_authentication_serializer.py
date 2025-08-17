@@ -2,7 +2,8 @@ import unittest
 
 from store.models import User
 from store.serializers.authentication_serializer import RegisterSerializer, LoginSerializer, \
-    AccountVerificationSerializer, TokenVerificationSerializer, ResetPasswordSerializer
+    AccountVerificationSerializer, TokenVerificationSerializer, ResetPasswordSerializer, \
+    ResendVerificationCodeSerializer
 
 
 class TestRegisterSerializer(unittest.TestCase):
@@ -790,3 +791,28 @@ class TestResetPasswordSerializer(unittest.TestCase):
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
         self.assertEqual(serializer.errors, {"password": "New passwords must match."})
+
+
+class TestResendVerificationCodeSerializer(unittest.TestCase):
+    def setUp(self):
+        user_creation_data = {"username": "tester", "email": "test@example.com", "password": "aaabb#123C"}
+        self.user = User.create_user(user_creation_data)
+        self.validated_data = {"user": self.user}
+
+    def test_resend_verification_code_correct_data(self):
+        serializer = ResendVerificationCodeSerializer(user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_resend_verification_code_incorrect_none_user(self):
+        serializer = ResendVerificationCodeSerializer(user=None)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"user": "User is not provided."})
