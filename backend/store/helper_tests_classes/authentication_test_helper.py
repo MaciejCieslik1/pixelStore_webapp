@@ -91,12 +91,16 @@ class TokenTestsHelper:
 class AuthenticationHelper:
     @staticmethod
     def register_and_verify_user(user_data: dict):
-        register_service = RegisterService()
-        register_service.register_user(user_data)
+        AuthenticationHelper.register_user(user_data)
         verify_account_service = VerifyAccountService()
         user = User.objects.get(username=user_data["username"])
         user_data["code"] = user.verification_code.code
         verify_account_service.verify_account(user_data)
+
+    @staticmethod
+    def register_user(user_data: dict):
+        register_service = RegisterService()
+        register_service.register_user(user_data)
 
     @staticmethod
     def login_user(user_data: dict) -> str:
@@ -117,7 +121,7 @@ class AuthenticationHelper:
 
     @staticmethod
     def return_exemplary_user_data() -> dict:
-        return {"email": "test@example.com", "username": "tester", "password": "hashedpwd",
+        return {"email": "test@example.com", "username": "tester", "password": "Abc123#ab",
          "is_verified": False, "bio": "I'm new here!", "money": 0.00, "is_superuser": False,
          "last_login": None, "address": "fweffwe", "postal_code": "00001", "city": "Warsaw", "country": "Poland"}
 
