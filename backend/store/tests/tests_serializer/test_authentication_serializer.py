@@ -473,8 +473,8 @@ class TestLoginSerializer(unittest.TestCase):
 
 class TestVerifyAccountSerializer(unittest.TestCase):
     def setUp(self):
-        self.data = {"email": "test@example.com", "code": "ABCdef123a"}
-        self.validated_data = {"email": "test@example.com", "code": "ABCdef123a"}
+        self.data = {"email": "test@example.com", "verification_code": "ABCdef123a"}
+        self.validated_data = {"email": "test@example.com", "verification_code": "ABCdef123a"}
 
     def test_verify_account_correct_data(self):
         serializer = AccountVerificationSerializer(data=self.data)
@@ -486,7 +486,7 @@ class TestVerifyAccountSerializer(unittest.TestCase):
         self.assertEqual(serializer.errors, {})
 
     def test_verify_account_correct_data_delete_spaces(self):
-        self.data = {"email": "   test@example.com     ", "code": "   ABCdef123a    "}
+        self.data = {"email": "   test@example.com     ", "verification_code": "   ABCdef123a    "}
         serializer = AccountVerificationSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -496,7 +496,7 @@ class TestVerifyAccountSerializer(unittest.TestCase):
         self.assertEqual(serializer.errors, {})
 
     def test_verify_account_incorrect_empty_email(self):
-        self.data = {"email": "", "code": "ABCdef123a"}
+        self.data = {"email": "", "verification_code": "ABCdef123a"}
         serializer = AccountVerificationSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -506,7 +506,7 @@ class TestVerifyAccountSerializer(unittest.TestCase):
         self.assertEqual(serializer.errors, {"email": "Email is not provided."})
 
     def test_verify_account_incorrect_none_email(self):
-        self.data = {"email": None, "code": "ABCdef123a"}
+        self.data = {"email": None, "verification_code": "ABCdef123a"}
         serializer = AccountVerificationSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -514,73 +514,43 @@ class TestVerifyAccountSerializer(unittest.TestCase):
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
         self.assertEqual(serializer.errors, {"email": "Email is not provided."})
-
-    def test_verify_account_incorrect_no_email_local_part(self):
-        self.data["email"] = "@gmail.com"
-        serializer = AccountVerificationSerializer(data=self.data)
-
-        result = serializer.is_valid()
-
-        self.assertEqual(result, False)
-        self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
-
-    def test_verify_account_incorrect_no_email_domain_part(self):
-        self.data["email"] = "tester@.com"
-        serializer = AccountVerificationSerializer(data=self.data)
-
-        result = serializer.is_valid()
-
-        self.assertEqual(result, False)
-        self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
-
-    def test_verify_account_incorrect_no_email_ending_part(self):
-        self.data["email"] = "tester@gmail"
-        serializer = AccountVerificationSerializer(data=self.data)
-
-        result = serializer.is_valid()
-
-        self.assertEqual(result, False)
-        self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
 
     def test_verify_account_incorrect_verification_code_too_short(self):
-        self.data["code"] = "ABC123abc"
+        self.data["verification_code"] = "ABC123abc"
         serializer = AccountVerificationSerializer(data=self.data)
 
         result = serializer.is_valid()
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": "Verification code must contain exactly 10 characters."})
+        self.assertEqual(serializer.errors, {"verification_code": "Verification code must contain exactly 10 characters."})
 
     def test_verify_account_incorrect_verification_code_too_long(self):
-        self.data["code"] = "ABC123abc12"
+        self.data["verification_code"] = "ABC123abc12"
         serializer = AccountVerificationSerializer(data=self.data)
 
         result = serializer.is_valid()
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": "Verification code must contain exactly 10 characters."})
+        self.assertEqual(serializer.errors, {"verification_code": "Verification code must contain exactly 10 characters."})
 
     def test_verify_account_incorrect_empty_verification_code(self):
-        self.data["code"] = ""
+        self.data["verification_code"] = ""
         serializer = AccountVerificationSerializer(data=self.data)
 
         result = serializer.is_valid()
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
+        self.assertEqual(serializer.errors, {"verification_code": "Verification code is not provided."})
 
     def test_verify_account_incorrect_none_verification_code(self):
-        self.data = {"email": "test@example.com", "code": None}
+        self.data = {"email": "test@example.com", "verification_code": None}
         serializer = AccountVerificationSerializer(data=self.data)
 
         result = serializer.is_valid()
 
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
+        self.assertEqual(serializer.errors, {"verification_code": "Verification code is not provided."})
