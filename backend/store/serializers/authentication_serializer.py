@@ -364,14 +364,14 @@ class ResetPasswordSerializer:
         return True
 
 class ResendVerificationCodeSerializer:
-    def __init__(self, data: dict):
-        self._data = data
+    def __init__(self, user: User):
+        self._user = user
         self._validated_data = {}
         self._errors = {}
 
     @property
-    def data(self):
-        return self._data
+    def user(self):
+        return self._user
 
     @property
     def validated_data(self):
@@ -382,4 +382,8 @@ class ResendVerificationCodeSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return False
+        if self.user is None:
+            self.errors["user"] = "User is not provided."
+            return False
+        self.validated_data["user"] = self.user
+        return True
