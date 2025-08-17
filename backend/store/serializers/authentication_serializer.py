@@ -232,12 +232,13 @@ class AccountVerificationSerializer:
         return True
 
     def _validate_verification_code(self) -> bool:
+        code_length = 10
         verification_code = self.data.get("verification_code")
         if verification_code is None or not verification_code.strip():
             self.errors["verification_code"] = "Verification code is not provided."
             return False
         verification_code = verification_code.strip()
-        if len(verification_code) != 10:
+        if len(verification_code) != code_length:
             self.errors["verification_code"] = "Verification code must contain exactly 10 characters."
             return False
         self.validated_data["verification_code"] = verification_code
@@ -296,8 +297,71 @@ class ResetPasswordSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return False
+        password_number_1 = 1
+        password_number_2 = 2
+        return (self._validate_user() and self._validate_code() and self._validate_password(self.data["password1"],
+            password_number_1) and self._validate_password(self.data["password2"], password_number_2) and
+            self._validate_same_passwords())
 
+    def _validate_user(self) -> bool:
+        if self.user is None:
+            self.errors["user"] = "User is not provided."
+            return False
+        self.validated_data["user"] = self.user
+        return True
+
+    def _validate_code(self) -> bool:
+        code_length = 10
+        verification_code = self.data.get("code")
+        if verification_code is None or not verification_code.strip():
+            self.errors["code"] = "Code is not provided."
+            return False
+        verification_code = verification_code.strip()
+        if len(verification_code) != code_length:
+            self.errors["code"] = "Code must contain exactly 10 characters."
+            return False
+        self.validated_data["code"] = verification_code
+        return True
+
+    def _validate_password(self, password: str, password_number) -> bool:
+        min_length = 8
+        max_length = 64
+
+        if password is None or not password.strip():
+            self.errors["password"] = "Password is not provided."
+            return False
+        password = password.strip()
+        if not DataValidator.validate_length(password, min_length, max_length):
+            self.errors["password"] = f"Password must be between {min_length} and {max_length} characters."
+            return False
+
+        self.validated_data[f"password{password_number}"] = password
+        return self._has_password_essential_characters(password)
+
+    def _has_password_essential_characters(self, password: str) -> bool:
+        has_digit = re.search(r"\d", password)
+        has_small_letter = re.search(r"[a-z]", password)
+        has_capital_letter = re.search(r"[A-Z]", password)
+        has_special_character = re.search(r"[!@#$%^&*(),.?\":{}|<>]", password)
+
+        if has_digit and has_small_letter and has_capital_letter and has_special_character:
+            return True
+        else:
+            self.errors["password"] = "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."
+            return False
+
+    def _validate_same_passwords(self):
+        password1 = self.data["password1"]
+        password2 = self.data["password2"]
+        password1 = password1.strip()
+        password2 = password2.strip()
+        if password1 != password2:
+            self.errors["password"] = "New passwords must match."
+            return False
+        self.validated_data["password1"] = password1
+        self.validated_data["password2"] = password2
+        return True
 
 class ResendVerificationCodeSerializer:
     def __init__(self, data: dict):
