@@ -1,10 +1,8 @@
 import unittest
 
-from django.core.serializers import serialize
-
-from store.helper_tests_classes.authentication_test_helper import AuthenticationHelper
+from store.models import User
 from store.serializers.authentication_serializer import RegisterSerializer, LoginSerializer, \
-    AccountVerificationSerializer, TokenVerificationSerializer
+    AccountVerificationSerializer, TokenVerificationSerializer, ResetPasswordSerializer
 
 
 class TestRegisterSerializer(unittest.TestCase):
@@ -601,3 +599,194 @@ class TestVerifyTokenSerializer(unittest.TestCase):
         self.assertEqual(result, False)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
         self.assertEqual(serializer.errors, {"token": "Token is not provided."})
+
+
+class TestResetPasswordSerializer(unittest.TestCase):
+    def setUp(self):
+        user_creation_data = {"username": "tester", "email": "test@example.com", "password": "aaabb#123C"}
+        self.user = User.create_user(user_creation_data)
+        self.data = {"code": "ABC123abc2", "password1": "testeR9#", "password2": "testeR9#"}
+        self.validated_data = {"code": "ABC123abc2", "password1": "testeR9#", "password2": "testeR9#"}
+
+    def test_reset_password_correct_data(self):
+        serializer = ResetPasswordSerializer(data=self.data, user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_reset_password_correct_data_delete_spaces(self):
+        self.data = {"code": "  ABC123abc2   ", "password1": "  testeR9#  ", "password2": "  testeR9#   "}
+        serializer = ResetPasswordSerializer(data=self.data, user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_reset_password_incorrect_none_user(self):
+        serializer = ResetPasswordSerializer(data=self.data, user=None)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {"user": "User is not provided."})
+
+    def test_reset_password_incorrect_empty_code(self):
+        self.data = {"code": "", "password1": "testeR9#", "password2": "testeR9#"}
+        serializer = ResetPasswordSerializer(data=self.data, user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {"code": "Code is not provided."})
+
+    def test_reset_password_incorrect_none_code(self):
+        self.data = {"code": None, "password1": "testeR9#", "password2": "testeR9#"}
+        serializer = ResetPasswordSerializer(data=self.data, user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {"code": "Code is not provided."})
+
+    def test_reset_password_incorrect_empty_password1(self):
+        self.data = {"code": "ABC123abc2", "password1": "", "password2": "testeR9#"}
+        serializer = ResetPasswordSerializer(data=self.data, user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {"password1": "Password is not provided."})
+
+    def test_reset_password_incorrect_none_password1(self):
+        self.data = {"code": "ABC123abc2", "password1": None, "password2": "testeR9#"}
+        serializer = ResetPasswordSerializer(data=self.data, user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {"password2": "Password is not provided."})
+
+    def test_reset_password_incorrect_empty_password2(self):
+        self.data = {"code": "ABC123abc2", "password1": "testeR9#", "password2": ""}
+        serializer = ResetPasswordSerializer(data=self.data, user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {"password1": "Password is not provided."})
+
+    def test_reset_password_incorrect_none_password2(self):
+        self.data = {"code": "ABC123abc2", "password1": "testeR9#", "password2": None}
+        serializer = ResetPasswordSerializer(data=self.data, user=self.user)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.data)
+        self.assertEqual(serializer.errors, {"password2": "Password is not provided."})
+
+    def test_register_correct_data_min_passwords_edge_case(self):
+        self.data["password1"] = "testtR9#"
+        self.data["password2"] = "testtR9#"
+        self.validated_data["password1"] = "testtR9#"
+        self.validated_data["password2"] = "testtR9#"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_register_correct_data_max_passwords_edge_case(self):
+        self.data["password1"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        self.data["password2"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        self.validated_data["password1"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        self.validated_data["password2"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_register_incorrect_password_has_no_capital_letter(self):
+        self.data["password1"] = "testtt9#"
+        self.data["password2"] = "testtt9#"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."})
+
+    def test_register_incorrect_password_has_no_digits(self):
+        self.data["password1"] = "testRRR#"
+        self.data["password2"] = "testRRR#"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."})
+
+    def test_register_incorrect_password_has_no_special_character(self):
+        self.data["password1"] = "testRRR9"
+        self.data["password2"] = "testRRR9"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": "Password needs at least one small letter, \
+                                                          capital letter, digit and special character."})
+
+    def test_register_incorrect_password_too_short(self):
+        self.data["password1"] = "testR9#a"
+        self.data["password2"] = "testR9#a"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": "Password must be between 8 and 64 characters."})
+
+    def test_register_incorrect_password_too_long(self):
+        self.data["password1"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        self.data["password2"] = "testtR9#aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": "Password must be between 8 and 64 characters."})
+
+    def test_register_incorrect_passwords_not_mach(self):
+        self.data["password1"] = "testtR9#"
+        self.data["password2"] = "testtR9#a"
+        serializer = RegisterSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"password": "New passwords must match."})
