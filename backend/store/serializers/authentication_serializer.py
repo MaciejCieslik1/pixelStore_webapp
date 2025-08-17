@@ -1,6 +1,7 @@
 import re
 
 from store.helper_classes.authentication_helper import DataValidator
+from store.models import User
 
 
 class RegisterSerializer:
@@ -271,37 +272,20 @@ class TokenVerificationSerializer:
         return True
 
 
-class RefreshTokenSerializer:
-    def __init__(self, data: dict):
-        self._data = data
-        self._validated_data = {}
-        self._errors = {}
-
-    @property
-    def data(self):
-        return self._data
-
-    @property
-    def validated_data(self):
-        return self._validated_data
-
-    @property
-    def errors(self):
-        return self._errors
-
-    def is_valid(self) -> bool:
-        return False
-
-
 class ResetPasswordSerializer:
-    def __init__(self, data: dict):
+    def __init__(self, data: dict, user: User):
         self._data = data
+        self._user = user
         self._validated_data = {}
         self._errors = {}
 
     @property
     def data(self):
         return self._data
+
+    @property
+    def user(self):
+        return self._user
 
     @property
     def validated_data(self):
