@@ -1,6 +1,8 @@
 import unittest
 
-from store.serializers.authentication_serializer import RegisterSerializer, LoginSerializer
+from store.helper_tests_classes.authentication_test_helper import AuthenticationHelper
+from store.serializers.authentication_serializer import RegisterSerializer, LoginSerializer, \
+    AccountVerificationSerializer
 
 
 class TestRegisterSerializer(unittest.TestCase):
@@ -439,8 +441,7 @@ class TestLoginSerializer(unittest.TestCase):
         self.assertEqual(serializer.errors, {"email": "Email is not provided."})
 
     def test_login_incorrect_data_none_email(self):
-        self.data = {"email": "", "password": "Abcdefg1#abc"}
-        self.validated_data = {"email": None, "password": "Abcdefg1#abc"}
+        self.data = {"email": None, "password": "Abcdefg1#abc"}
         serializer = LoginSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -470,3 +471,116 @@ class TestLoginSerializer(unittest.TestCase):
         self.assertEqual(serializer.errors, {"password": "Password is not provided."})
 
 
+class TestVerifyAccountSerializer(unittest.TestCase):
+    def setUp(self):
+        self.data = {"email": "test@example.com", "code": "ABCdef123a"}
+        self.validated_data = {"email": "test@example.com", "code": "ABCdef123a"}
+
+    def test_verify_account_correct_data(self):
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_verify_account_correct_data_delete_spaces(self):
+        self.data = {"email": "   test@example.com     ", "code": "   ABCdef123a    "}
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, True)
+        self.assertEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {})
+
+    def test_verify_account_incorrect_empty_email(self):
+        self.data = {"email": "", "code": "ABCdef123a"}
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
+
+    def test_verify_account_incorrect_none_email(self):
+        self.data = {"email": None, "code": "ABCdef123a"}
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
+
+    def test_verify_account_incorrect_no_email_local_part(self):
+        self.data["email"] = "@gmail.com"
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
+
+    def test_verify_account_incorrect_no_email_domain_part(self):
+        self.data["email"] = "tester@.com"
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
+
+    def test_verify_account_incorrect_no_email_ending_part(self):
+        self.data["email"] = "tester@gmail"
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not valid."})
+
+    def test_verify_account_incorrect_verification_code_too_short(self):
+        self.data["code"] = "ABC123abc"
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Verification code must contain exactly 10 characters."})
+
+    def test_verify_account_incorrect_verification_code_too_long(self):
+        self.data["code"] = "ABC123abc12"
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Verification code must contain exactly 10 characters."})
+
+    def test_verify_account_incorrect_empty_verification_code(self):
+        self.data["code"] = ""
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
+
+    def test_verify_account_incorrect_none_verification_code(self):
+        self.data = {"email": "test@example.com", "code": None}
+        serializer = AccountVerificationSerializer(data=self.data)
+
+        result = serializer.is_valid()
+
+        self.assertEqual(result, False)
+        self.assertNotEqual(serializer.validated_data, self.validated_data)
+        self.assertEqual(serializer.errors, {"email": "Email is not provided."})
