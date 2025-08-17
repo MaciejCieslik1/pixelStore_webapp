@@ -219,7 +219,28 @@ class AccountVerificationSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return False
+        return self._validate_email() and self._validate_verification_code()
+
+    def _validate_email(self) -> bool:
+        email = self.data.get("email")
+        if email is None or not email.strip():
+            self.errors["email"] = "Email is not provided."
+            return False
+        field_value = email.strip()
+        self.validated_data["email"] = field_value
+        return True
+
+    def _validate_verification_code(self) -> bool:
+        verification_code = self.data.get("verification_code")
+        if verification_code is None or not verification_code.strip():
+            self.errors["verification_code"] = "Verification code is not provided."
+            return False
+        verification_code = verification_code.strip()
+        if len(verification_code) != 10:
+            self.errors["verification_code"] = "Verification code must contain exactly 10 characters."
+            return False
+        self.validated_data["verification_code"] = verification_code
+        return True
 
 
 class TokenVerificationSerializer:
