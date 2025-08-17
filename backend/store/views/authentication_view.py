@@ -288,7 +288,7 @@ class ResendVerificationCodeView(APIView):
         return self._resend_verification_code_service
 
     def post(self, request: Request) -> Response:
-        serializer = ResendVerificationCodeSerializer(data=request.data)
+        serializer = ResendVerificationCodeSerializer(user=request.user)
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
