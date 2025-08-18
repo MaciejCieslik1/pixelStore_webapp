@@ -1,6 +1,5 @@
 from django.db import DatabaseError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -37,7 +36,7 @@ class RegisterView(APIView):
                 )
             except (EmailAlreadyTakenError, UsernameAlreadyTakenError) as e:
                 return Response(
-                    {"error": "Validation error", "details": e.message_dict if hasattr(e, "message_dict") else str(e)},
+                    {"error": "Validation error", "details": str(e)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             except DatabaseError as e:
