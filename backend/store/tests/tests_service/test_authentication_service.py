@@ -37,7 +37,7 @@ class TestRegisterService:
         mock_send.assert_called_once()
         email_arg, code_arg = mock_send.call_args[0]
 
-        assert result == "User tester registered successfully"
+        assert result == "User tester registered successfully."
         additional_rows_number = 1
         RegistrationTestsHelper.assert_rows_count(rows_count, additional_rows_number)
         assert User.objects.filter(email="test@example.com", username="tester").exists()
