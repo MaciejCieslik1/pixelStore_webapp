@@ -29,11 +29,6 @@ class RegisterView(APIView):
             try:
                 communicate = self.register_service.register_user(serializer.validated_data)
                 return Response({"msg": communicate}, status=status.HTTP_201_CREATED)
-            except MissingCredentialsError as e:
-                return Response(
-                    {"error": f"Missing field: {str(e)}"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
             except (EmailAlreadyTakenError, UsernameAlreadyTakenError) as e:
                 return Response(
                     {"error": "Validation error", "details": str(e)},
@@ -67,15 +62,10 @@ class LoginView(APIView):
             try:
                 tokens = self.login_service.login_user(serializer.validated_data)
                 return Response({
-                            "msg": "User successfully logged.",
+                            "msg": "User successfully logged in.",
                             "access_token": tokens["access_token"],
                             "refresh_token": tokens["refresh_token"],},
                             status=status.HTTP_200_OK
-                )
-            except (MissingEmailError, MissingPasswordError) as e:
-                return Response(
-                    {"error": "Missing credentials.", "details": str(e)},
-                    status=status.HTTP_400_BAD_REQUEST
                 )
             except UserNotFoundError as e:
                 return Response(
@@ -89,7 +79,7 @@ class LoginView(APIView):
                 )
             except UserNotVerifiedError as e:
                 return Response(
-                        {"error": "Validation error", "details": str(e)},
+                        {"error": "Validation error.", "details": str(e)},
                     status=status.HTTP_401_UNAUTHORIZED
                 )
             except Exception as e:
@@ -142,11 +132,6 @@ class VerifyAccountView(APIView):
             try:
                 self.verify_account_service.verify_account(serializer.validated_data)
                 return Response({"msg": "Account successfully verified."}, status=status.HTTP_200_OK)
-            except NoVerificationCodeFoundError as e:
-                return Response(
-                    {"error": "Missing credentials.", "details": str(e)},
-                    status=status.HTTP_404_NOT_FOUND
-                )
             except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
                 return Response(
                     {"error": "Verification code error.", "details": str(e)},
