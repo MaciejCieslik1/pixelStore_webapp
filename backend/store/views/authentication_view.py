@@ -159,11 +159,11 @@ class VerifyTokenView(APIView):
         if serializer.is_valid():
             try:
                 self.verify_token_service.verify_token(serializer.validated_data)
-                return Response({"valid": True, "msg": "Access token is valid."}, status=status.HTTP_200_OK)
+                return Response({"valid": True, "msg": "Token is valid."}, status=status.HTTP_200_OK)
             except jwt.ExpiredSignatureError:
-                return Response({'valid': False, 'error': 'Access token expired.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'valid': False, 'error': 'Token expired.'}, status=status.HTTP_401_UNAUTHORIZED)
             except jwt.InvalidTokenError:
-                return Response({'valid': False, 'error': 'Invalid access token.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'valid': False, 'error': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:
                 return Response(
                     {"error": "Unexpected error.", "details": str(e)},
@@ -187,7 +187,7 @@ class RefreshTokenView(APIView):
             try:
                 access_token = self.refresh_token_service.refresh_access_token(serializer.validated_data)
                 return Response({
-                    "msg": "Access successfully refreshed.",
+                    "msg": "Access token successfully refreshed.",
                     "access_token": access_token},
                     status=status.HTTP_200_OK
                 )
@@ -204,7 +204,7 @@ class RefreshTokenView(APIView):
             except TokenTypeMismatchError:
                 return Response({
                     "msg": "Failed to refresh access token.",
-                    'error': 'Access Token instead of refresh token provided.'},
+                    'error': 'Access token instead of refresh token provided.'},
                     status=status.HTTP_401_UNAUTHORIZED)
             except UserNotFoundError as e:
                 return Response(
