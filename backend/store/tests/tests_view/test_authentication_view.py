@@ -4,7 +4,11 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from django.db import DatabaseError
 
-from store.exceptions import UsernameAlreadyTakenError, UserNotFoundError, InvalidPasswordError, UserNotVerifiedError
+from store.exceptions import UsernameAlreadyTakenError, UserNotFoundError, InvalidPasswordError, UserNotVerifiedError, \
+    TokenExpiredError, CannotGetTokenFromRequestError, InvalidVerificationCodeError, ExpiredVerificationCodeError
+from store.helper_classes.authentication_helper import TokenGenerator
+from store.helper_tests_classes.authentication_test_helper import AuthenticationHelper
+from store.models import User
 from store.service.authentication_service import EmailAlreadyTakenError
 
 
@@ -116,3 +120,107 @@ class TestLoginView:
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.data["error"] == "Unexpected error."
+
+    def test_verify_account_serializer_error(self):
+        response = self.client.post("/verify_account/")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestLogoutView:
+    def setup_method(self):
+        self.client = APIClient()
+        self.user_data = AuthenticationHelper.return_exemplary_user_data()
+        self.user_data["is_verified"] = True
+        self.user = User.create_user(self.user_data)
+        self.user.save()
+        token = TokenGenerator.generate_access_token(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+    @patch("store.service.authentication_service.LogoutService.logout_user")
+    def test_logout_success(self, mock_logout_user):
+        mock_logout_user.return_value = "User successfully logged out."
+
+        response = self.client.post("/logout/")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["msg"] == "User successfully logged out."
+        mock_logout_user.assert_called_once()
+
+
+    @patch("store.service.authentication_service.LogoutService.logout_user")
+    def test_logout_token_expired(self, mock_logout_user):
+        mock_logout_user.side_effect = TokenExpiredError("Invalid token.")
+
+        response = self.client.post("/logout/")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.LogoutService.logout_user")
+    def test_logout_cannot_get_token_from_request(self, mock_logout_user):
+        mock_logout_user.side_effect = CannotGetTokenFromRequestError("Connot get token.")
+
+        response = self.client.post("/logout/")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.LogoutService.logout_user")
+    def test_login_other_exception(self, mock_logout_user):
+        mock_logout_user.side_effect = DatabaseError("DB connection failed")
+
+        response = self.client.post("/logout/")
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.data["error"] == "Unexpected error."
+
+
+@pytest.mark.django_db
+class TestVerifyAccountView:
+    def setup_method(self):
+        self.client = APIClient()
+        self.data = {"email": "test@example.com", "verification_code": "ABCDEabcd1"}
+
+    @patch("store.service.authentication_service.VerifyAccountService.verify_account")
+    def test_verify_account_success(self, mock_verify_account):
+        mock_verify_account.return_value = {"msg": "Account successfully verified."}
+
+        response = self.client.post("/verify_account/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["msg"] == "Account successfully verified."
+        mock_verify_account.assert_called_once_with(self.data)
+
+    @patch("store.service.authentication_service.VerifyAccountService.verify_account")
+    def test_verify_account_invalid_verification_code(self, mock_verify_account):
+        mock_verify_account.side_effect = InvalidVerificationCodeError("Invalid verification code.")
+
+        response = self.client.post("/verify_account/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Verification code error."
+
+    @patch("store.service.authentication_service.VerifyAccountService.verify_account")
+    def test_verify_account_expired_verification_code(self, mock_verify_account):
+        mock_verify_account.side_effect = ExpiredVerificationCodeError("Verification ncode has expired.")
+
+        response = self.client.post("/verify_account/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Verification code error."
+
+    @patch("store.service.authentication_service.VerifyAccountService.verify_account")
+    def test_verify_account_other_exception(self, mock_verify_account):
+        mock_verify_account.side_effect = DatabaseError("DB connection failed")
+
+        response = self.client.post("/verify_account/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.data["error"] == "Unexpected error."
+
+    def test_verify_account_serializer_error(self):
+        response = self.client.post("/verify_account/")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
