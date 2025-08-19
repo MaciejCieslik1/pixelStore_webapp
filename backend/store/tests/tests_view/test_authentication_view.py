@@ -1,3 +1,4 @@
+import jwt
 import pytest
 from unittest.mock import patch
 from rest_framework.test import APIClient
@@ -5,7 +6,8 @@ from rest_framework import status
 from django.db import DatabaseError
 
 from store.exceptions import UsernameAlreadyTakenError, UserNotFoundError, InvalidPasswordError, UserNotVerifiedError, \
-    TokenExpiredError, CannotGetTokenFromRequestError, InvalidVerificationCodeError, ExpiredVerificationCodeError
+    TokenExpiredError, CannotGetTokenFromRequestError, InvalidVerificationCodeError, ExpiredVerificationCodeError, \
+    RefreshTokenExpiredError, InvalidRefreshTokenError, TokenTypeMismatchError
 from store.helper_classes.authentication_helper import TokenGenerator
 from store.helper_tests_classes.authentication_test_helper import AuthenticationHelper
 from store.models import User
@@ -224,3 +226,127 @@ class TestVerifyAccountView:
         response = self.client.post("/verify_account/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestVerifyTokenView:
+    def setup_method(self):
+        self.client = APIClient()
+        self.data = {"token": "access_token"}
+
+    @patch("store.service.authentication_service.VerifyTokenService.verify_token")
+    def test_verify_token_success(self, mock_verify_token):
+        mock_verify_token.return_value = {"msg": "Token is valid."}
+
+        response = self.client.post("/verify_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["valid"] == True
+        assert response.data["msg"] == "Token is valid."
+        mock_verify_token.assert_called_once_with(self.data)
+
+    @patch("store.service.authentication_service.VerifyTokenService.verify_token")
+    def test_verify_token_expired(self, mock_verify_token):
+        mock_verify_token.side_effect = jwt.ExpiredSignatureError("Token expired.")
+
+        response = self.client.post("/verify_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["valid"] == False
+        assert response.data["error"] == "Token expired."
+
+    @patch("store.service.authentication_service.VerifyTokenService.verify_token")
+    def test_verify_token_invalid(self, mock_verify_token):
+        mock_verify_token.side_effect = jwt.InvalidTokenError("Invalid token.")
+
+        response = self.client.post("/verify_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["valid"] == False
+        assert response.data["error"] == "Invalid token."
+
+    @patch("store.service.authentication_service.VerifyTokenService.verify_token")
+    def test_verify_token_other_exception(self, mock_verify_token):
+        mock_verify_token.side_effect = DatabaseError("DB connection failed")
+
+        response = self.client.post("/verify_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.data["error"] == "Unexpected error."
+
+    def test_verify_account_serializer_error(self):
+        response = self.client.post("/verify_token/")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestRefreshTokenView:
+    def setup_method(self):
+        self.client = APIClient()
+        self.data = {"token": "refresh_token"}
+
+    @patch("store.service.authentication_service.RefreshTokenService.refresh_access_token")
+    def test_refresh_token_success(self, mock_refresh_token):
+        mock_refresh_token.return_value = "access_token"
+
+        response = self.client.post("/refresh_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["msg"] == "Access token successfully refreshed."
+        assert response.data["access_token"] == "access_token"
+        mock_refresh_token.assert_called_once_with(self.data)
+
+    @patch("store.service.authentication_service.RefreshTokenService.refresh_access_token")
+    def test_refresh_token_expired(self, mock_refresh_token):
+        mock_refresh_token.side_effect = RefreshTokenExpiredError("Refresh token expired.")
+
+        response = self.client.post("/refresh_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["msg"] == "Failed to refresh access token."
+        assert response.data["error"] == "Refresh token expired."
+
+    @patch("store.service.authentication_service.RefreshTokenService.refresh_access_token")
+    def test_refresh_token_invalid(self, mock_refresh_token):
+        mock_refresh_token.side_effect = InvalidRefreshTokenError("Invalid refresh token.")
+
+        response = self.client.post("/refresh_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["msg"] == "Failed to refresh access token."
+        assert response.data["error"] == "Invalid refresh token."
+
+    @patch("store.service.authentication_service.RefreshTokenService.refresh_access_token")
+    def test_refresh_token_type_mismatch(self, mock_refresh_token):
+        mock_refresh_token.side_effect = TokenTypeMismatchError("Access token instead of refresh token provided.")
+
+        response = self.client.post("/refresh_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["msg"] == "Failed to refresh access token."
+        assert response.data["error"] == "Access token instead of refresh token provided."
+
+    @patch("store.service.authentication_service.RefreshTokenService.refresh_access_token")
+    def test_refresh_token_invalid_user_not_found(self, mock_refresh_token):
+        mock_refresh_token.side_effect = UserNotFoundError("User not found.")
+
+        response = self.client.post("/refresh_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.data["error"] == "User not found."
+
+    @patch("store.service.authentication_service.RefreshTokenService.refresh_access_token")
+    def test_refresh_token_other_exception(self, mock_refresh_token):
+        mock_refresh_token.side_effect = DatabaseError("DB connection failed")
+
+        response = self.client.post("/refresh_token/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.data["error"] == "Unexpected error."
+
+    def test_refresh_account_serializer_error(self):
+        response = self.client.post("/refresh_token/")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
