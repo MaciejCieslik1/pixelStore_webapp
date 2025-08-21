@@ -1,16 +1,14 @@
 import jwt
 import pytest
 from unittest.mock import patch, ANY
-from rest_framework.test import APIClient, force_authenticate
+from rest_framework.test import APIClient
 from rest_framework import status
 from django.db import DatabaseError
 
 from store.exceptions import UsernameAlreadyTakenError, UserNotFoundError, InvalidPasswordError, UserNotVerifiedError, \
     TokenExpiredError, CannotGetTokenFromRequestError, InvalidVerificationCodeError, ExpiredVerificationCodeError, \
     RefreshTokenExpiredError, InvalidRefreshTokenError, TokenTypeMismatchError, PasswordsNotMatchError
-from store.helper_classes.authentication_helper import TokenGenerator
-from store.helper_tests_classes.authentication_test_helper import AuthenticationHelper
-from store.models import User
+from store.helper_tests_classes.authentication_test_helper import create_api_client_with_user
 from store.service.authentication_service import EmailAlreadyTakenError
 
 
@@ -132,13 +130,7 @@ class TestLoginView:
 @pytest.mark.django_db
 class TestLogoutView:
     def setup_method(self):
-        self.client = APIClient()
-        self.user_data = AuthenticationHelper.return_exemplary_user_data()
-        self.user_data["is_verified"] = True
-        self.user = User.create_user(self.user_data)
-        self.user.save()
-        token = TokenGenerator.generate_access_token(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        self.client, self.user = create_api_client_with_user()
 
     @patch("store.service.authentication_service.LogoutService.logout_user")
     def test_logout_success(self, mock_logout_user):
@@ -354,13 +346,7 @@ class TestRefreshTokenView:
 @pytest.mark.django_db
 class TestResetPassword:
     def setup_method(self):
-        self.client = APIClient()
-        self.user_data = AuthenticationHelper.return_exemplary_user_data()
-        self.user_data["is_verified"] = True
-        self.user = User.create_user(self.user_data)
-        self.user.save()
-        token = TokenGenerator.generate_access_token(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        self.client, self.user = create_api_client_with_user()
         self.data = {"password1": "ABC123abc#", "password2": "ABC123abc#", "code": "ABCabc123a"}
 
     @patch("store.service.authentication_service.ResetPasswordService.reset_password")
@@ -437,13 +423,7 @@ class TestResetPassword:
 @pytest.mark.django_db
 class TestResendVerificationCode:
     def setup_method(self):
-        self.client = APIClient()
-        self.user_data = AuthenticationHelper.return_exemplary_user_data()
-        self.user_data["is_verified"] = True
-        self.user = User.create_user(self.user_data)
-        self.user.save()
-        token = TokenGenerator.generate_access_token(self.user)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        self.client, self.user = create_api_client_with_user()
 
     @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
     def test_resend_verification_code_success(self, mock_resend_verification_code):
