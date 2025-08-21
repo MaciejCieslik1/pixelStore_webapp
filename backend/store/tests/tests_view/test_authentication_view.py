@@ -1,13 +1,13 @@
 import jwt
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 from rest_framework.test import APIClient
 from rest_framework import status
 from django.db import DatabaseError
 
 from store.exceptions import UsernameAlreadyTakenError, UserNotFoundError, InvalidPasswordError, UserNotVerifiedError, \
     TokenExpiredError, CannotGetTokenFromRequestError, InvalidVerificationCodeError, ExpiredVerificationCodeError, \
-    RefreshTokenExpiredError, InvalidRefreshTokenError, TokenTypeMismatchError
+    RefreshTokenExpiredError, InvalidRefreshTokenError, TokenTypeMismatchError, PasswordsNotMatchError
 from store.helper_classes.authentication_helper import TokenGenerator
 from store.helper_tests_classes.authentication_test_helper import AuthenticationHelper
 from store.models import User
@@ -350,3 +350,85 @@ class TestRefreshTokenView:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+
+@pytest.mark.django_db
+class TestResetPassword:
+    def setup_method(self):
+        self.client = APIClient()
+        self.user_data = AuthenticationHelper.return_exemplary_user_data()
+        self.user_data["is_verified"] = True
+        self.user = User.create_user(self.user_data)
+        self.user.save()
+        token = TokenGenerator.generate_access_token(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+        self.data = {"password1": "ABC123abc#", "password2": "ABC123abc#", "code": "ABCabc123a"}
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_reset_password_success(self, mock_reset_password):
+        mock_reset_password.return_value = "Password changed successfully."
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["msg"] == "Password changed successfully."
+        mock_reset_password.assert_called_once_with(ANY, {"user": ANY, "code": "ABCabc123a", "password1": "ABC123abc#",
+                "password2": "ABC123abc#",},)
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_reset_password_verification_code_invalid(self, mock_reset_password):
+        mock_reset_password.side_effect = InvalidVerificationCodeError("Refresh token expired.")
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Verification code error."
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_reset_password_verification_code_expired(self, mock_reset_password):
+        mock_reset_password.side_effect = ExpiredVerificationCodeError("Verification code error.")
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Verification code error."
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_reset_password_passwords_not_match(self, mock_reset_password):
+        mock_reset_password.side_effect = PasswordsNotMatchError("Changing password error.")
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.data["error"] == "Changing password error."
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_reset_password_token_invalid(self, mock_reset_password):
+        mock_reset_password.side_effect = TokenExpiredError("User not found.")
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_reset_password_token_expired(self, mock_reset_password):
+        mock_reset_password.side_effect = CannotGetTokenFromRequestError("DB connection failed")
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_refresh_token_other_exception(self, mock_reset_password):
+        mock_reset_password.side_effect = DatabaseError("DB connection failed")
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.data["error"] == "Unexpected error."
+
+    def test_reset_password_serializer_error(self):
+        response = self.client.post("/reset_password/")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
