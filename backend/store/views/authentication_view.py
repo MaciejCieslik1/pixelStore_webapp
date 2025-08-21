@@ -278,11 +278,6 @@ class ResendVerificationCodeView(APIView):
                 token = TokenUtils.get_jwt_token_from_request(request)
                 self.resend_verification_code_service.resend_verification_code(token, serializer.validated_data)
                 return Response({"msg": "Verification code sent."}, status=status.HTTP_200_OK)
-            except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
-                return Response(
-                    {"error": "Verification code error.", "details": str(e)},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
             except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
                 return Response(
                     {"error": "Access token error.", "details": str(e)},
