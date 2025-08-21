@@ -1,12 +1,11 @@
 from django.db import DatabaseError
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
 from ..serializers.authentication_serializer import RegisterSerializer, LoginSerializer, AccountVerificationSerializer, \
-    TokenVerificationSerializer, RefreshTokenSerializer, ResetPasswordSerializer, ResendVerificationCodeSerializer
+    TokenVerificationSerializer, ResetPasswordSerializer, ResendVerificationCodeSerializer
 from ..service.authentication_service import *
 import jwt
 
@@ -30,14 +29,9 @@ class RegisterView(APIView):
             try:
                 communicate = self.register_service.register_user(serializer.validated_data)
                 return Response({"msg": communicate}, status=status.HTTP_201_CREATED)
-            except MissingCredentialsError as e:
-                return Response(
-                    {"error": f"Missing field: {str(e)}"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
             except (EmailAlreadyTakenError, UsernameAlreadyTakenError) as e:
                 return Response(
-                    {"error": "Validation error", "details": e.message_dict if hasattr(e, "message_dict") else str(e)},
+                    {"error": "Validation error", "details": str(e)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             except DatabaseError as e:
@@ -68,15 +62,10 @@ class LoginView(APIView):
             try:
                 tokens = self.login_service.login_user(serializer.validated_data)
                 return Response({
-                            "msg": "User successfully logged.",
+                            "msg": "User successfully logged in.",
                             "access_token": tokens["access_token"],
                             "refresh_token": tokens["refresh_token"],},
                             status=status.HTTP_200_OK
-                )
-            except (MissingEmailError, MissingPasswordError) as e:
-                return Response(
-                    {"error": "Missing credentials.", "details": str(e)},
-                    status=status.HTTP_400_BAD_REQUEST
                 )
             except UserNotFoundError as e:
                 return Response(
@@ -90,7 +79,7 @@ class LoginView(APIView):
                 )
             except UserNotVerifiedError as e:
                 return Response(
-                        {"error": "Validation error", "details": str(e)},
+                        {"error": "Validation error.", "details": str(e)},
                     status=status.HTTP_401_UNAUTHORIZED
                 )
             except Exception as e:
@@ -143,11 +132,6 @@ class VerifyAccountView(APIView):
             try:
                 self.verify_account_service.verify_account(serializer.validated_data)
                 return Response({"msg": "Account successfully verified."}, status=status.HTTP_200_OK)
-            except NoVerificationCodeFoundError as e:
-                return Response(
-                    {"error": "Missing credentials.", "details": str(e)},
-                    status=status.HTTP_404_NOT_FOUND
-                )
             except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
                 return Response(
                     {"error": "Verification code error.", "details": str(e)},
@@ -175,11 +159,11 @@ class VerifyTokenView(APIView):
         if serializer.is_valid():
             try:
                 self.verify_token_service.verify_token(serializer.validated_data)
-                return Response({"valid": True, "msg": "Access token is valid."}, status=status.HTTP_200_OK)
+                return Response({"valid": True, "msg": "Token is valid."}, status=status.HTTP_200_OK)
             except jwt.ExpiredSignatureError:
-                return Response({'valid': False, 'error': 'Access token expired.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'valid': False, 'error': 'Token expired.'}, status=status.HTTP_401_UNAUTHORIZED)
             except jwt.InvalidTokenError:
-                return Response({'valid': False, 'error': 'Invalid access token.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'valid': False, 'error': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
             except Exception as e:
                 return Response(
                     {"error": "Unexpected error.", "details": str(e)},
@@ -198,12 +182,12 @@ class RefreshTokenView(APIView):
         return self._refresh_token_service
 
     def post(self, request: Request) -> Response:
-        serializer = RefreshTokenSerializer(data=request.data)
+        serializer = TokenVerificationSerializer(data=request.data)
         if serializer.is_valid():
             try:
                 access_token = self.refresh_token_service.refresh_access_token(serializer.validated_data)
                 return Response({
-                    "msg": "Access successfully refreshed.",
+                    "msg": "Access token successfully refreshed.",
                     "access_token": access_token},
                     status=status.HTTP_200_OK
                 )
@@ -220,7 +204,7 @@ class RefreshTokenView(APIView):
             except TokenTypeMismatchError:
                 return Response({
                     "msg": "Failed to refresh access token.",
-                    'error': 'Access Token instead of refresh token provided.'},
+                    'error': 'Access token instead of refresh token provided.'},
                     status=status.HTTP_401_UNAUTHORIZED)
             except UserNotFoundError as e:
                 return Response(
@@ -247,10 +231,10 @@ class ResetPasswordView(APIView):
         return self._reset_password_service
 
     def post(self, request: Request) -> Response:
-        serializer = ResetPasswordSerializer(data=request.data)
+        serializer = ResetPasswordSerializer(data=request.data, user=request.user)
         if serializer.is_valid():
             try:
-                token = TokenUtils.get_jwt_token_from_request(serializer.validated_data)
+                token = TokenUtils.get_jwt_token_from_request(request)
                 self.reset_password_service.reset_password(token, serializer.validated_data)
                 return Response({"msg": "Password changed successfully."}, status=status.HTTP_200_OK)
             except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
@@ -288,17 +272,12 @@ class ResendVerificationCodeView(APIView):
         return self._resend_verification_code_service
 
     def post(self, request: Request) -> Response:
-        serializer = ResendVerificationCodeSerializer(data=request.data)
+        serializer = ResendVerificationCodeSerializer(user=request.user)
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
                 self.resend_verification_code_service.resend_verification_code(token, serializer.validated_data)
                 return Response({"msg": "Verification code sent."}, status=status.HTTP_200_OK)
-            except (InvalidVerificationCodeError, ExpiredVerificationCodeError) as e:
-                return Response(
-                    {"error": "Verification code error.", "details": str(e)},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
             except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
                 return Response(
                     {"error": "Access token error.", "details": str(e)},

@@ -26,7 +26,7 @@ class RegisterService:
 
         EmailSender.send_code(data["email"], verification_code)
 
-        return f"User {user.username} registered successfully"
+        return f"User {user.username} registered successfully."
 
     def _check_if_email_or_username_occupied(self, data: dict):
         if User.objects.filter(email=data["email"]).exists():

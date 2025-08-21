@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 from jwt import ExpiredSignatureError
+from rest_framework.request import Request
 
 from ..exceptions import *
 from ..models import User, VerificationCode
@@ -80,8 +81,14 @@ class TokenUtils:
             raise TokenExpiredByReplacementError("Access token is no longer valid.")
 
     @staticmethod
-    def get_jwt_token_from_request(request):
+    def get_jwt_token_from_request(request: Request):
         auth_header = request.META.get('HTTP_AUTHORIZATION', '')
         if auth_header.startswith('Bearer '):
             return auth_header[len('Bearer '):]
         raise CannotGetTokenFromRequestError("Cannot get token from http request.")
+
+
+class DataValidator:
+    @staticmethod
+    def validate_length(string: str, min_length: int, max_length: int) -> bool:
+        return min_length <= len(string) <= max_length
