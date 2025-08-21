@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import Type
 from unittest.mock import patch
+from rest_framework.test import APIClient
 
 import jwt
 import pytest
 
 from config import settings_test
+from store.helper_classes.authentication_helper import TokenGenerator
 from store.models import User, UserPreferences, UserStatistics, Address, VerificationCode
 from store.service.authentication_service import RegisterService, LoginService, ResetPasswordService, \
     VerifyAccountService, ResendVerificationCodeService
@@ -150,3 +152,14 @@ class ResendVerificationCodeTestsHelper:
 
         assert f"{message}" in str(e.value)
         assert verification_code_before == verification_code_after
+
+
+def create_api_client_with_user():
+    client = APIClient()
+    user_data = AuthenticationHelper.return_exemplary_user_data()
+    user_data["is_verified"] = True
+    user = User.create_user(user_data)
+    user.save()
+    token = TokenGenerator.generate_access_token(user)
+    client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+    return client, user
