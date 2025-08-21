@@ -1,7 +1,7 @@
 import jwt
 import pytest
 from unittest.mock import patch, ANY
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, force_authenticate
 from rest_framework import status
 from django.db import DatabaseError
 
@@ -403,7 +403,7 @@ class TestResetPassword:
 
     @patch("store.service.authentication_service.ResetPasswordService.reset_password")
     def test_reset_password_token_invalid(self, mock_reset_password):
-        mock_reset_password.side_effect = TokenExpiredError("User not found.")
+        mock_reset_password.side_effect = TokenExpiredError("Access token error.")
 
         response = self.client.post("/reset_password/", self.data, format="json")
 
@@ -412,7 +412,7 @@ class TestResetPassword:
 
     @patch("store.service.authentication_service.ResetPasswordService.reset_password")
     def test_reset_password_token_expired(self, mock_reset_password):
-        mock_reset_password.side_effect = CannotGetTokenFromRequestError("DB connection failed")
+        mock_reset_password.side_effect = CannotGetTokenFromRequestError("Access token error.")
 
         response = self.client.post("/reset_password/", self.data, format="json")
 
@@ -432,3 +432,52 @@ class TestResetPassword:
         response = self.client.post("/reset_password/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+class TestResendVerificationCode:
+    def setup_method(self):
+        self.client = APIClient()
+        self.user_data = AuthenticationHelper.return_exemplary_user_data()
+        self.user_data["is_verified"] = True
+        self.user = User.create_user(self.user_data)
+        self.user.save()
+        token = TokenGenerator.generate_access_token(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token}')
+
+    @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
+    def test_resend_verification_code_success(self, mock_resend_verification_code):
+        mock_resend_verification_code.return_value = "Verification code sent."
+
+        response = self.client.post("/resend_verification_code/")
+
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["msg"] == "Verification code sent."
+        mock_resend_verification_code.assert_called_once_with(ANY, {"user": ANY})
+
+    @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
+    def test_resend_verification_code_token_expired(self, mock_resend_verification_code):
+        mock_resend_verification_code.side_effect = CannotGetTokenFromRequestError("Access token error.")
+
+        response = self.client.post("/resend_verification_code/")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
+    def test_resend_verification_code_cannot_get_token_from_request(self, mock_resend_verification_code):
+        mock_resend_verification_code.side_effect = CannotGetTokenFromRequestError("Access token error.")
+
+        response = self.client.post("/resend_verification_code/")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
+    def test_resend_verification_code_other_exception(self, mock_resend_verification_code):
+        mock_resend_verification_code.side_effect = DatabaseError("DB connection failed")
+
+        response = self.client.post("/resend_verification_code/")
+
+        assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+        assert response.data["error"] == "Unexpected error."
