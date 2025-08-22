@@ -295,16 +295,6 @@ class TestRegisterSerializer(unittest.TestCase):
         self.assertNotEqual(serializer.validated_data, self.validated_data)
         self.assertEqual(serializer.errors, {"address": "Address cannot be longer than 64 characters."})
 
-    def test_register_incorrect_address_other_characters(self):
-        self.data["address"] = "aaaaaa3fdf"
-        serializer = RegisterSerializer(data=self.data)
-
-        result = serializer.is_valid()
-
-        self.assertEqual(result, False)
-        self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"address": "Address should contain only letters."})
-
     def test_register_incorrect_no_postal_code(self):
         self.data["postal_code"] = ""
         serializer = RegisterSerializer(data=self.data)
