@@ -19,7 +19,7 @@ from store.models import User, UserPreferences, UserStatistics, Address, Verific
 class TestRegisterService:
     @pytest.fixture(autouse=True)
     def setup_data(self):
-        self.user_data = self.user_data = AuthenticationHelper.return_exemplary_user_data()
+        self.user_data = AuthenticationHelper.return_exemplary_user_data()
 
     def test_register_user_saves_to_db(self):
         rows_count = {}
