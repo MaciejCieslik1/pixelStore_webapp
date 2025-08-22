@@ -7,7 +7,8 @@ from django.db import DatabaseError
 
 from store.exceptions import UsernameAlreadyTakenError, UserNotFoundError, InvalidPasswordError, UserNotVerifiedError, \
     TokenExpiredError, CannotGetTokenFromRequestError, InvalidVerificationCodeError, ExpiredVerificationCodeError, \
-    RefreshTokenExpiredError, InvalidRefreshTokenError, TokenTypeMismatchError, PasswordsNotMatchError
+    RefreshTokenExpiredError, InvalidRefreshTokenError, TokenTypeMismatchError, PasswordsNotMatchError, \
+    IncorrectTokenError, TokenExpiredByReplacementError
 from store.helper_tests_classes.authentication_test_helper import create_api_client_with_user
 from store.service.authentication_service import EmailAlreadyTakenError
 
@@ -142,6 +143,23 @@ class TestLogoutView:
         assert response.data["msg"] == "User successfully logged out."
         mock_logout_user.assert_called_once()
 
+    @patch("store.service.authentication_service.LogoutService.logout_user")
+    def test_logout_token_invalid(self, mock_logout_user):
+        mock_logout_user.side_effect = IncorrectTokenError("Invalid token.")
+
+        response = self.client.post("/logout/")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.LogoutService.logout_user")
+    def test_logout_token_replaced(self, mock_logout_user):
+        mock_logout_user.side_effect = TokenExpiredByReplacementError("Invalid token.")
+
+        response = self.client.post("/logout/")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
 
     @patch("store.service.authentication_service.LogoutService.logout_user")
     def test_logout_token_expired(self, mock_logout_user):
@@ -154,7 +172,7 @@ class TestLogoutView:
 
     @patch("store.service.authentication_service.LogoutService.logout_user")
     def test_logout_cannot_get_token_from_request(self, mock_logout_user):
-        mock_logout_user.side_effect = CannotGetTokenFromRequestError("Connot get token.")
+        mock_logout_user.side_effect = CannotGetTokenFromRequestError("Cannot get token.")
 
         response = self.client.post("/logout/")
 
@@ -389,7 +407,7 @@ class TestResetPassword:
 
     @patch("store.service.authentication_service.ResetPasswordService.reset_password")
     def test_reset_password_token_invalid(self, mock_reset_password):
-        mock_reset_password.side_effect = TokenExpiredError("Access token error.")
+        mock_reset_password.side_effect = IncorrectTokenError("Access token error.")
 
         response = self.client.post("/reset_password/", self.data, format="json")
 
@@ -398,7 +416,7 @@ class TestResetPassword:
 
     @patch("store.service.authentication_service.ResetPasswordService.reset_password")
     def test_reset_password_token_expired(self, mock_reset_password):
-        mock_reset_password.side_effect = CannotGetTokenFromRequestError("Access token error.")
+        mock_reset_password.side_effect = TokenExpiredError("Access token error.")
 
         response = self.client.post("/reset_password/", self.data, format="json")
 
@@ -406,7 +424,25 @@ class TestResetPassword:
         assert response.data["error"] == "Access token error."
 
     @patch("store.service.authentication_service.ResetPasswordService.reset_password")
-    def test_refresh_token_other_exception(self, mock_reset_password):
+    def test_reset_password_invalid(self, mock_reset_password):
+        mock_reset_password.side_effect = CannotGetTokenFromRequestError("Invalid token.")
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_reset_password_replaced(self, mock_reset_password):
+        mock_reset_password.side_effect = TokenExpiredByReplacementError("Invalid token.")
+
+        response = self.client.post("/reset_password/", self.data, format="json")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.ResetPasswordService.reset_password")
+    def test_reset_password_other_exception(self, mock_reset_password):
         mock_reset_password.side_effect = DatabaseError("DB connection failed")
 
         response = self.client.post("/reset_password/", self.data, format="json")
@@ -436,8 +472,18 @@ class TestResendVerificationCode:
         mock_resend_verification_code.assert_called_once_with(ANY, {"user": ANY})
 
     @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
+    def test_resend_verification_code_token_invalid(self, mock_reset_password):
+        mock_reset_password.side_effect = IncorrectTokenError("Access token error.")
+
+        response = self.client.post("/resend_verification_code/")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+
+    @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
     def test_resend_verification_code_token_expired(self, mock_resend_verification_code):
-        mock_resend_verification_code.side_effect = CannotGetTokenFromRequestError("Access token error.")
+        mock_resend_verification_code.side_effect = TokenExpiredError("Access token error.")
 
         response = self.client.post("/resend_verification_code/")
 
@@ -447,6 +493,15 @@ class TestResendVerificationCode:
     @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
     def test_resend_verification_code_cannot_get_token_from_request(self, mock_resend_verification_code):
         mock_resend_verification_code.side_effect = CannotGetTokenFromRequestError("Access token error.")
+
+        response = self.client.post("/resend_verification_code/")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.data["error"] == "Access token error."
+
+    @patch("store.service.authentication_service.ResendVerificationCodeService.resend_verification_code")
+    def test_resend_verification_code_token_replaced(self, mock_resend_verification_code):
+        mock_resend_verification_code.side_effect = TokenExpiredByReplacementError("Invalid token.")
 
         response = self.client.post("/resend_verification_code/")
 
