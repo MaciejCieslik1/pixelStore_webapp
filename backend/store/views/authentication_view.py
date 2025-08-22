@@ -106,7 +106,7 @@ class LogoutView(APIView):
             token = TokenUtils.get_jwt_token_from_request(request)
             communicate = self.logout_service.logout_user(token, request.user)
             return Response({"msg": communicate}, status=status.HTTP_200_OK)
-        except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
+        except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError, TokenExpiredByReplacementError) as e:
             return Response(
                 {"error": "Access token error.", "details": str(e)},
                 status=status.HTTP_401_UNAUTHORIZED
@@ -247,7 +247,7 @@ class ResetPasswordView(APIView):
                     {"error": "Changing password error.", "details": str(e)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
+            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError, TokenExpiredByReplacementError) as e:
                 return Response(
                     {"error": "Access token error.", "details": str(e)},
                     status=status.HTTP_401_UNAUTHORIZED
@@ -278,7 +278,7 @@ class ResendVerificationCodeView(APIView):
                 token = TokenUtils.get_jwt_token_from_request(request)
                 self.resend_verification_code_service.resend_verification_code(token, serializer.validated_data)
                 return Response({"msg": "Verification code sent."}, status=status.HTTP_200_OK)
-            except (TokenExpiredError, CannotGetTokenFromRequestError) as e:
+            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError, TokenExpiredByReplacementError) as e:
                 return Response(
                     {"error": "Access token error.", "details": str(e)},
                     status=status.HTTP_401_UNAUTHORIZED
