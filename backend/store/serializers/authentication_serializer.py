@@ -109,7 +109,7 @@ class RegisterSerializer:
             return False
 
         self.validated_data["address"] = address
-        return self._has_place_only_letters(address, "address")
+        return True
 
     def _has_place_only_letters(self, place: str, place_category: str) -> bool:
         if place.isalpha():
