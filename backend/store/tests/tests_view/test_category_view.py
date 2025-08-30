@@ -8,7 +8,6 @@ from store.exceptions import TokenExpiredByReplacementError, CannotGetTokenFromR
     IncorrectTokenError, CategoryNameAlreadyOccupiedError, CategoryNotFoundError
 from store.helper_tests_classes.authentication_test_helper import create_api_client_with_user
 from store.helper_tests_classes.category_test_helper import CategoryTestHelper
-from store.models import Category
 
 
 @pytest.mark.django_db
@@ -83,7 +82,7 @@ class TestFindCategoryByName:
         assert response.data["error"] == "Unexpected error."
 
     def test_find_category_by_name_serializer_error(self):
-        response = self.client.get("/category/find_by_name/example_name1/")
+        response = self.client.get("/category/find_by_name/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -226,6 +225,7 @@ class TestCreateCategoryByName:
         assert response.data["error"] == "Unexpected error."
 
     def test_create_category_serializer_error(self):
+        self.new_category_data["name"] = ""
         response = self.client.post("/category/create/", self.new_category_data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
