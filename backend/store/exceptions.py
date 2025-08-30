@@ -58,3 +58,9 @@ class InvalidRefreshTokenError(jwt.InvalidTokenError):
 
 class TokenTypeMismatchError(ValueError):
     pass
+
+class CategoryNameAlreadyOccupiedError(ValueError):
+    pass
+
+class CategoryNotFoundError(ValueError):
+    pass
