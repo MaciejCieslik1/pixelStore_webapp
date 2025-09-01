@@ -22,4 +22,5 @@ urlpatterns = [
     path('', include('store.urls.authentication_urls')),
     path('address/', include('store.urls.address_urls')),
     path('category/', include('store.urls.category_urls')),
+    path('notification/', include('store.urls.notification_urls')),
 ]
