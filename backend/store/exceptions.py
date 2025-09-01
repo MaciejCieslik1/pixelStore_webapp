@@ -64,3 +64,9 @@ class CategoryNameAlreadyOccupiedError(ValueError):
 
 class CategoryNotFoundError(ValueError):
     pass
+
+class NotificationNotFoundError(ValueError):
+    pass
+
+class NotificationNotBelongToUserError(ValueError):
+    pass
