@@ -27,7 +27,7 @@ class FindCategoryByNameView(APIView):
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
-                category_found = self.find_category_by_name_service.find_by_name(token, name)
+                category_found = self.find_category_by_name_service.find_by_name(token, request.user, name)
                 return Response(category_found, status=status.HTTP_200_OK)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
@@ -63,7 +63,7 @@ class FindAllCategoriesView(APIView):
     def get(self, request: Request) -> Response:
         try:
             token = TokenUtils.get_jwt_token_from_request(request)
-            category_found = self.find_all_categories_service.find_all(token)
+            category_found = self.find_all_categories_service.find_all(token, request.user)
             return Response(category_found, status=status.HTTP_200_OK)
         except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                 TokenExpiredByReplacementError) as e:
@@ -94,7 +94,7 @@ class CreateCategoryView(APIView):
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
-                self.create_category_service.create(token, serializer.validated_data)
+                self.create_category_service.create(token, request.user, serializer.validated_data)
                 return Response({"msg": "Category created successfully."}, status=status.HTTP_200_OK)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
