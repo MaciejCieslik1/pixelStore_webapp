@@ -30,13 +30,14 @@ class FindAllNotificationsView(APIView):
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
 
-                date_from = request.query_params.get("date_from")
-                date_to = request.query_params.get("date_to")
-                order = request.query_params.get("order", "desc")
-                page = int(request.query_params.get("page", 1))
-                page_size = int(request.query_params.get("page_size", 10))
+                date_from = serializer.validated_data.get("date_from")
+                date_to = serializer.validated_data.get("date_to")
+                order = serializer.validated_data.get("order", "desc")
+                page = serializer.validated_data.get("page", 1)
+                page_size = serializer.validated_data.get("page_size", 10)
 
-                notifications_found = self.find_all_notifications_service.find_all(token, date_from, date_to, order, page, page_size)
+                notifications_found = self.find_all_notifications_service.find_all(token, serializer.validated_data,
+                    date_from, date_to, order, page, page_size)
                 return Response(notifications_found, status=status.HTTP_200_OK)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
