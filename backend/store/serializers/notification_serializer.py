@@ -19,69 +19,81 @@ class FindAllNotificationsSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
+        return (self._validate_date_from() and self._validate_date_to() and self._validate_order() and self._validate_page()
+            and self._validate_page_size())
+
+    def _validate_date_from(self):
+        date_from = self.data.get("date_from")
+        if isinstance(date_from, str):
+            date_from = date_from.strip()
+        if date_from:
+            try:
+                parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+                self.validated_data["date_from"] = parsed
+            except ValueError:
+                self.errors["date_from"] = "Date must have YYYY-MM-DD format."
+                return False
+        else:
+            self.validated_data["date_from"] = None
         return True
 
-    # def is_valid(self) -> bool:
-    #     return (self._validate_date_from() and self._validate_date_to() and self._validate_order() and self._validate_page()
-    #         and self._validate_page_size())
-    #
-    # def _validate_date_from(self):
-    #     date_from = self.data.get("date_from")
-    #     if date_from:
-    #         try:
-    #             parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
-    #             self._validated_data["date_from"] = parsed
-    #         except ValueError:
-    #             self._errors["date_from"] = "Invalid date format. Use YYYY-MM-DD."
-    #             return False
-    #     else:
-    #         self._validated_data["date_from"] = None
-    #     return True
-    #
-    # def _validate_date_to(self):
-    #     date_to = self.data.get("date_to")
-    #     if date_to:
-    #         try:
-    #             parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
-    #             self._validated_data["date_to"] = parsed
-    #         except ValueError:
-    #             self._errors["date_to"] = "Invalid date format. Use YYYY-MM-DD."
-    #             return False
-    #     else:
-    #         self._validated_data["date_to"] = None
-    #     return True
-    #
-    # def _validate_order(self):
-    #     order = self.data.get("order", "desc").lower()
-    #     if order not in ["asc", "desc"]:
-    #         self._errors["order"] = "Order must be 'asc' or 'desc'."
-    #         return False
-    #     self._validated_data["order"] = order
-    #     return True
-    #
-    # def _validate_page(self):
-    #     page = self.data.get("page", 1)
-    #     try:
-    #         page = int(page)
-    #         if page < 1:
-    #             raise ValueError
-    #         self._validated_data["page"] = page
-    #     except ValueError:
-    #         self._errors["page"] = "Page must be a positive integer."
-    #         return False
-    #     return True
-    #
-    # def _validate_page_size(self):
-    #     page_size = self.data.get("page_size", 10)
-    #     try:
-    #         page_size = int(page_size)
-    #         if page_size < 1 or page_size > 100:
-    #             raise ValueError
-    #         self._validated_data["page_size"] = page_size
-    #     except ValueError:
-    #         self._errors["page_size"] = "Page size must be between 1 and 100."
-    #         return False
-    #     return True
+    def _validate_date_to(self):
+        date_to = self.data.get("date_to")
+        if isinstance(date_to, str):
+            date_to = date_to.strip()
+        if date_to:
+            try:
+                parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+                self.validated_data["date_to"] = parsed
+            except ValueError:
+                self.errors["date_to"] = "Date must have YYYY-MM-DD format."
+                return False
+        else:
+            self.validated_data["date_to"] = None
+        return True
+
+    def _validate_order(self):
+        order = self.data.get("order", "desc")
+        if order:
+            if isinstance(order, str):
+                order = order.strip().lower()
+            if order not in ["asc", "desc"]:
+                self.errors["order"] = "Order must be 'asc' or 'desc'."
+                return False
+            self.validated_data["order"] = order
+            return True
+        self.validated_data["order"] = "desc"
+        return True
+
+    def _validate_page(self):
+        page = self.data.get("page", 1)
+        if page or page == 0 :
+            try:
+                page = int(page)
+                if page < 1:
+                    raise ValueError
+                self.validated_data["page"] = page
+            except ValueError:
+                self.errors["page"] = "Page number must be a positive integer."
+                return False
+            return True
+        self.validated_data["page"] = 1
+        return True
+
+    def _validate_page_size(self):
+        page_size = self.data.get("page_size", 10)
+        if page_size or page_size == 0:
+            try:
+                page_size = int(page_size)
+                if page_size < 1 or page_size > 100:
+                    raise ValueError
+                self.validated_data["page_size"] = page_size
+            except ValueError:
+                self.errors["page_size"] = "Page size must be between 1 and 100."
+                return False
+            return True
+        self.validated_data["page_size"] = 10
+        return True
 
 
 class CreateNotificationSerializer:
@@ -103,6 +115,44 @@ class CreateNotificationSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
+        return self._validate_username() and self._validate_sent_date_time() and self._validate_text()
+
+    def _validate_username(self):
+        username = self._data.get("username")
+        if isinstance(username, str):
+            username = username.strip()
+        if not username:
+            self.errors["username"] = "Username is not provided."
+            return False
+        self.validated_data["username"] = username
+        return True
+
+    def _validate_sent_date_time(self):
+        sent_date_time = self._data.get("sent_date_time")
+        if isinstance(sent_date_time, str):
+            sent_date_time = sent_date_time.strip()
+        if not sent_date_time:
+            self.errors["sent_date_time"] = "Sent date/time is not provided."
+            return False
+        try:
+            parsed = datetime.strptime(sent_date_time, "%Y-%m-%d %H:%M:%S")
+            self.validated_data["sent_date_time"] = parsed
+            return True
+        except ValueError:
+            self.errors["sent_date_time"] = "Date time must have format YYYY-MM-DD HH:MM:SS."
+            return False
+
+    def _validate_text(self):
+        text = self._data.get("text")
+        if isinstance(text, str):
+            text = text.strip()
+        if not text:
+            self.errors["text"] = "Text is not provided."
+            return False
+        if len(text) > 1024:
+            self.errors["text"] = "Text cannot be longer than 1024 characters."
+            return False
+        self._validated_data["text"] = text
         return True
 
 
@@ -125,4 +175,13 @@ class DeleteNotificationSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return True
+        notification_id = self.data.get("notification_id")
+        try:
+            notification_id = int(notification_id)
+            if notification_id < 1:
+                raise ValueError
+            self.validated_data["notification_id"] = notification_id
+            return True
+        except (TypeError, ValueError):
+            self.errors["notification_id"] = "Notification id must be a positive integer and exist."
+            return False
