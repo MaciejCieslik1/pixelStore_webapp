@@ -78,7 +78,7 @@ class TestFindAllNotifications:
 class TestCreateNotification:
     def setup_method(self):
         self.client, self.user = create_api_client_with_user()
-        self.data = {"sender_id": 1, "receiver_id": 2, "sent_date_time": "2025-08-31T12:00:00Z", "text": "Hello Bob!"}
+        self.data = {"username": "tester", "sent_date_time": "2025-08-31 12:00:00", "text": "Hello Bob!"}
 
     @patch("store.service.notification_service.CreateNotificationService.create")
     def test_create_success(self, mock_create):
