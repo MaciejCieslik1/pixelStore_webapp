@@ -224,9 +224,8 @@ class TestFindAlNotificationsSerializer(unittest.TestCase):
 
 class TestCreateNotificationSerializer(unittest.TestCase):
     def setUp(self):
-        self.data = {"username": "tester", "sent_date_time": "2025-09-02 15:30:00", "text": "Hello"}
-        parsed_sent_date_time = datetime.strptime(self.data["sent_date_time"], "%Y-%m-%d %H:%M:%S")
-        self.validated_data = {"username": "tester", "sent_date_time": parsed_sent_date_time, "text": "Hello"}
+        self.data = {"username": "tester", "text": "Hello"}
+        self.validated_data = {"username": "tester", "text": "Hello"}
 
     def test_create_notification_success(self):
         serializer = CreateNotificationSerializer(data=self.data)
@@ -238,7 +237,7 @@ class TestCreateNotificationSerializer(unittest.TestCase):
         self.assertEqual(serializer.errors, {})
 
     def test_create_notification_success_delete_spaces(self):
-        self.data = {"username": "   tester   ", "sent_date_time": " 2025-09-02 15:30:00  ", "text": " Hello "}
+        self.data = {"username": "   tester   ", "text": " Hello "}
         serializer = CreateNotificationSerializer(data=self.data)
 
         result = serializer.is_valid()
@@ -277,26 +276,6 @@ class TestCreateNotificationSerializer(unittest.TestCase):
         self.assertFalse(result)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
         self.assertEqual(serializer.errors, {"username": "Username is not provided."})
-
-    def test_create_notification_empty_sent_date_time(self):
-        self.data["sent_date_time"] = ""
-        serializer = CreateNotificationSerializer(data=self.data)
-
-        result = serializer.is_valid()
-
-        self.assertFalse(result)
-        self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"sent_date_time": "Sent date/time is not provided."})
-
-    def test_create_notification_none_sent_date_time(self):
-        self.data["sent_date_time"] = None
-        serializer = CreateNotificationSerializer(data=self.data)
-
-        result = serializer.is_valid()
-
-        self.assertFalse(result)
-        self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"sent_date_time": "Sent date/time is not provided."})
 
     def test_create_notification_empty_text(self):
         self.data["text"] = ""
