@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from store.helper_classes.authentication_helper import DataValidator
+
+
 class FindAllNotificationsSerializer:
     def __init__(self, data: dict):
         self._data = data
@@ -115,7 +118,7 @@ class CreateNotificationSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return self._validate_username() and self._validate_sent_date_time() and self._validate_text()
+        return self._validate_username() and self._validate_text()
 
     def _validate_username(self):
         username = self._data.get("username")
@@ -126,21 +129,6 @@ class CreateNotificationSerializer:
             return False
         self.validated_data["username"] = username
         return True
-
-    def _validate_sent_date_time(self):
-        sent_date_time = self._data.get("sent_date_time")
-        if isinstance(sent_date_time, str):
-            sent_date_time = sent_date_time.strip()
-        if not sent_date_time:
-            self.errors["sent_date_time"] = "Sent date/time is not provided."
-            return False
-        try:
-            parsed = datetime.strptime(sent_date_time, "%Y-%m-%d %H:%M:%S")
-            self.validated_data["sent_date_time"] = parsed
-            return True
-        except ValueError:
-            self.errors["sent_date_time"] = "Date time must have format YYYY-MM-DD HH:MM:SS."
-            return False
 
     def _validate_text(self):
         text = self._data.get("text")
