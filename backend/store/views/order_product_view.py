@@ -1,8 +1,14 @@
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from store.exceptions import IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError, \
+    TokenExpiredByReplacementError, InvalidInputData
+from store.helper_classes.authentication_helper import TokenUtils
+from store.serializers.order_product_serializer import FindByIdOrderProductSerializer, CreateOrderProductSerializer, \
+    UpdateOrderProductSerializer, DeleteOrderProductSerializer
 from store.service.order_product_service import FindByIdOrderProductService, CreateOrderProductService, \
     UpdateOrderProductService, DeleteOrderProductService
 
@@ -19,7 +25,30 @@ class FindByIdOrderProductView(APIView):
         return self._find_by_id_order_product_service
 
     def get(self, request: Request, order_product_id: int) -> Response:
-        pass
+        serializer = FindByIdOrderProductSerializer(order_product_id=order_product_id)
+        if serializer.is_valid():
+            try:
+                token = TokenUtils.get_jwt_token_from_request(request)
+                order_product_found = self.find_by_id_order_product_service.find_by_id(token, request.user, order_product_id)
+                return Response(order_product_found, status=status.HTTP_200_OK)
+            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
+                    TokenExpiredByReplacementError) as e:
+                return Response(
+                    {"error": "Access token error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except InvalidInputData as e:
+                return Response(
+                    {"error": "Invalid input data provided.", "details": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        else:
+            return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateOrderProductView(APIView):
@@ -34,7 +63,30 @@ class CreateOrderProductView(APIView):
         return self._create_order_product_service
 
     def post(self, request: Request) -> Response:
-        pass
+        serializer = CreateOrderProductSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                token = TokenUtils.get_jwt_token_from_request(request)
+                communicate = self.create_order_product_service.create(token, request.user, serializer.validated_data)
+                return Response({"msg": communicate}, status=status.HTTP_200_OK)
+            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
+                    TokenExpiredByReplacementError) as e:
+                return Response(
+                    {"error": "Access token error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except InvalidInputData as e:
+                return Response(
+                    {"error": "Invalid input data provided.", "details": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UpdateOrderProductView(APIView):
@@ -48,8 +100,31 @@ class UpdateOrderProductView(APIView):
     def update_order_product_service(self):
         return self._update_order_product_service
 
-    def update(self, request: Request) -> Response:
-        pass
+    def put(self, request: Request) -> Response:
+        serializer = UpdateOrderProductSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                token = TokenUtils.get_jwt_token_from_request(request)
+                communicate = self.update_order_product_service.update(token, request.user, serializer.validated_data)
+                return Response({"msg": communicate}, status=status.HTTP_200_OK)
+            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
+                    TokenExpiredByReplacementError) as e:
+                return Response(
+                    {"error": "Access token error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except InvalidInputData as e:
+                return Response(
+                    {"error": "Invalid input data provided.", "details": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DeleteOrderProductView(APIView):
@@ -63,5 +138,28 @@ class DeleteOrderProductView(APIView):
     def delete_order_product_service(self):
         return self._delete_order_product_service
 
-    def delete(self, request: Request) -> Response:
-        pass
+    def delete(self, request: Request, order_product_id: int) -> Response:
+        serializer = DeleteOrderProductSerializer(order_product_id=order_product_id)
+        if serializer.is_valid():
+            try:
+                token = TokenUtils.get_jwt_token_from_request(request)
+                communicate = self.delete_order_product_service.delete(token, request.user, order_product_id)
+                return Response({"msg": communicate}, status=status.HTTP_200_OK)
+            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
+                    TokenExpiredByReplacementError) as e:
+                return Response(
+                    {"error": "Access token error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except InvalidInputData as e:
+                return Response(
+                    {"error": "Invalid input data provided.", "details": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        else:
+            return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
