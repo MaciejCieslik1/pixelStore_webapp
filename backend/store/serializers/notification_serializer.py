@@ -122,8 +122,10 @@ class CreateNotificationSerializer:
 
     def _validate_username(self):
         username = self._data.get("username")
-        if isinstance(username, str):
-            username = username.strip()
+        if not isinstance(username, str):
+            self.errors["username"] = "Username must be string."
+            return False
+        username = username.strip()
         if not username:
             self.errors["username"] = "Username is not provided."
             return False
