@@ -86,9 +86,8 @@ class TestFindByIdOrderProduct:
         assert response.data["error"] == "Invalid input data provided."
 
     def test_find_by_id_invalid_serializer(self):
-        self.ordered_product_id = -1
-        response = self.client.delete(f"/order_product/find_by_id/{self.ordered_product_id}/",
-                                      data=self.ordered_product_id, format="json")
+        self.ordered_product_id = 0
+        response = self.client.get(f"/order_product/find_by_id/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -97,7 +96,7 @@ class TestFindByIdOrderProduct:
 class TestCreateOrderProduct:
     def setup_method(self):
         self.client, self.user = create_api_client_with_user()
-        self.data = {"product_id": 1, "seller_username": "tester2", "shopping_price": 2000}
+        self.data = {"product_id": 1, "transaction_id": 1, "seller_username": "tester2", "shopping_price": 2000}
 
     @patch("store.service.order_product_service.CreateOrderProductService.create")
     def test_create_success(self, mock_create):
@@ -113,7 +112,7 @@ class TestCreateOrderProduct:
     def test_create_invalid_token(self, mock_create):
         mock_create.side_effect = IncorrectTokenError("Access token error.")
 
-        response = self.client.post("/order_product/create/")
+        response = self.client.post("/order_product/create/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -122,7 +121,7 @@ class TestCreateOrderProduct:
     def test_create_expired_token(self, mock_create):
         mock_create.side_effect = TokenExpiredError("Access token error.")
 
-        response = self.client.post("/order_product/create/")
+        response = self.client.post("/order_product/create/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -131,7 +130,7 @@ class TestCreateOrderProduct:
     def test_create_cannot_get_token_from_request(self, mock_create):
         mock_create.side_effect = CannotGetTokenFromRequestError("Access token error.")
 
-        response = self.client.post("/order_product/create/")
+        response = self.client.post("/order_product/create/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -140,7 +139,7 @@ class TestCreateOrderProduct:
     def test_create_token_expired_by_replacement(self, mock_create):
         mock_create.side_effect = TokenExpiredByReplacementError("Access token error.")
 
-        response = self.client.post("/order_product/create/")
+        response = self.client.post("/order_product/create/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -149,7 +148,7 @@ class TestCreateOrderProduct:
     def test_create_other_exception(self, mock_create):
         mock_create.side_effect = DatabaseError("DB connection failed")
 
-        response = self.client.post("/order_product/create/")
+        response = self.client.post("/order_product/create/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.data["error"] == "Unexpected error."
@@ -158,14 +157,14 @@ class TestCreateOrderProduct:
     def test_create_invalid_input_data(self, mock_create):
         mock_create.side_effect = InvalidInputData("Invalid input data provided.")
 
-        response = self.client.post("/order_product/create/")
+        response = self.client.post("/order_product/create/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data["error"] == "Invalid input data provided."
 
     def test_create_invalid_serializer(self):
         self.data = {}
-        response = self.client.put("/order_product/create/", data=self.data, format="json")
+        response = self.client.post("/order_product/create/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
@@ -261,7 +260,7 @@ class TestDeleteOrderProduct:
     def test_delete_success(self, mock_delete):
         mock_delete.return_value = "Order deleted successfully."
 
-        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/", data=self.ordered_product_id, format="json")
+        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data["msg"] == "Order deleted successfully."
@@ -271,7 +270,7 @@ class TestDeleteOrderProduct:
     def test_delete_invalid_token(self, mock_delete):
         mock_delete.side_effect = IncorrectTokenError("Access token error.")
 
-        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/", data=self.ordered_product_id, format="json")
+        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -280,7 +279,7 @@ class TestDeleteOrderProduct:
     def test_delete_expired_token(self, mock_delete):
         mock_delete.side_effect = TokenExpiredError("Access token error.")
 
-        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/", data=self.ordered_product_id, format="json")
+        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -289,7 +288,7 @@ class TestDeleteOrderProduct:
     def test_delete_cannot_get_token_from_request(self, mock_delete):
         mock_delete.side_effect = CannotGetTokenFromRequestError("Access token error.")
 
-        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/", data=self.ordered_product_id, format="json")
+        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -298,7 +297,7 @@ class TestDeleteOrderProduct:
     def test_delete_token_expired_by_replacement(self, mock_delete):
         mock_delete.side_effect = TokenExpiredByReplacementError("Access token error.")
 
-        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/", data=self.ordered_product_id, format="json")
+        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -307,7 +306,7 @@ class TestDeleteOrderProduct:
     def test_delete_other_exception(self, mock_delete):
         mock_delete.side_effect = DatabaseError("DB connection failed")
 
-        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/", data=self.ordered_product_id, format="json")
+        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.data["error"] == "Unexpected error."
@@ -316,15 +315,13 @@ class TestDeleteOrderProduct:
     def test_delete_invalid_input_data(self, mock_delete):
         mock_delete.side_effect = InvalidInputData("Invalid input data provided.")
 
-        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/",
-            data=self.ordered_product_id, format="json")
+        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data["error"] == "Invalid input data provided."
 
     def test_delete_invalid_serializer(self):
-        self.ordered_product_id = -1
-        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/",
-                                      data=self.ordered_product_id, format="json")
+        self.ordered_product_id = 0
+        response = self.client.delete(f"/order_product/delete/{self.ordered_product_id}/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
