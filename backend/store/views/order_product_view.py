@@ -7,8 +7,8 @@ from rest_framework.views import APIView
 from store.exceptions import IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError, \
     TokenExpiredByReplacementError, InvalidInputData
 from store.helper_classes.authentication_helper import TokenUtils
-from store.serializers.order_product_serializer import FindByIdOrderProductSerializer, CreateOrderProductSerializer, \
-    UpdateOrderProductSerializer, DeleteOrderProductSerializer
+from store.serializers.order_product_serializer import FindByIdAndDeleteOrderProductSerializer, CreateOrderProductSerializer, \
+    UpdateOrderProductSerializer
 from store.service.order_product_service import FindByIdOrderProductService, CreateOrderProductService, \
     UpdateOrderProductService, DeleteOrderProductService
 
@@ -25,7 +25,7 @@ class FindByIdOrderProductView(APIView):
         return self._find_by_id_order_product_service
 
     def get(self, request: Request, order_product_id: int) -> Response:
-        serializer = FindByIdOrderProductSerializer(order_product_id=order_product_id)
+        serializer = FindByIdAndDeleteOrderProductSerializer(order_product_id=order_product_id)
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
@@ -139,7 +139,7 @@ class DeleteOrderProductView(APIView):
         return self._delete_order_product_service
 
     def delete(self, request: Request, order_product_id: int) -> Response:
-        serializer = DeleteOrderProductSerializer(order_product_id=order_product_id)
+        serializer = FindByIdAndDeleteOrderProductSerializer(order_product_id=order_product_id)
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
