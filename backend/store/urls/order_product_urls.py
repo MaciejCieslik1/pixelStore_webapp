@@ -1,13 +1,10 @@
 from django.urls import path
 
-from store.service.order_product_service import FindByIdOrderProductService, CreateOrderProductService, \
-    UpdateOrderProductService, DeleteOrderProductService
-from store.views.order_product_view import FindByIdOrderProductView, CreateOrderProductView, UpdateOrderProductView, \
-    DeleteOrderProductView
+from store.service.order_product_service import FindByIdOrderProductService, CreateOrderProductService, DeleteOrderProductService
+from store.views.order_product_view import FindByIdOrderProductView, CreateOrderProductView, DeleteOrderProductView
 
 find_by_id_order_product_service = FindByIdOrderProductService()
 create_service = CreateOrderProductService()
-update_service = UpdateOrderProductService()
 delete_service = DeleteOrderProductService()
 
 
@@ -16,8 +13,6 @@ urlpatterns = [
         find_by_id_order_product_service=find_by_id_order_product_service), name="find_by_id_order_product/<int:order_product_id>"),
     path("create/", CreateOrderProductView.as_view(create_order_product_service=create_service),
          name="create_order_product"),
-    path("update/", UpdateOrderProductView.as_view(update_order_product_service=update_service),
-         name="update_order_product"),
     path("delete/<int:order_product_id>/", DeleteOrderProductView.as_view(delete_order_product_service=delete_service),
          name="delete_order_product/<int:order_product_id>"),
 ]

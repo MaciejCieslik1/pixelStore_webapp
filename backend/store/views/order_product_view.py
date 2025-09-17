@@ -7,10 +7,10 @@ from rest_framework.views import APIView
 from store.exceptions import IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError, \
     TokenExpiredByReplacementError, InvalidInputData
 from store.helper_classes.authentication_helper import TokenUtils
-from store.serializers.order_product_serializer import FindByIdAndDeleteOrderProductSerializer, CreateOrderProductSerializer, \
-    UpdateOrderProductSerializer
+from store.serializers.check_id_serializer import CheckIdSerializer
+from store.serializers.order_product_serializer import CreateOrderProductSerializer
 from store.service.order_product_service import FindByIdOrderProductService, CreateOrderProductService, \
-    UpdateOrderProductService, DeleteOrderProductService
+    DeleteOrderProductService
 
 
 class FindByIdOrderProductView(APIView):
@@ -25,7 +25,7 @@ class FindByIdOrderProductView(APIView):
         return self._find_by_id_order_product_service
 
     def get(self, request: Request, order_product_id: int) -> Response:
-        serializer = FindByIdAndDeleteOrderProductSerializer(order_product_id=order_product_id)
+        serializer = CheckIdSerializer(id=order_product_id, name="Order product")
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
@@ -89,44 +89,6 @@ class CreateOrderProductView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UpdateOrderProductView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def __init__(self, update_order_product_service: UpdateOrderProductService, **kwargs):
-        super().__init__(**kwargs)
-        self._update_order_product_service = update_order_product_service
-
-    @property
-    def update_order_product_service(self):
-        return self._update_order_product_service
-
-    def put(self, request: Request) -> Response:
-        serializer = UpdateOrderProductSerializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                token = TokenUtils.get_jwt_token_from_request(request)
-                communicate = self.update_order_product_service.update(token, request.user, serializer.validated_data)
-                return Response({"msg": communicate}, status=status.HTTP_200_OK)
-            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
-                    TokenExpiredByReplacementError) as e:
-                return Response(
-                    {"error": "Access token error.", "details": str(e)},
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-            except InvalidInputData as e:
-                return Response(
-                    {"error": "Invalid input data provided.", "details": str(e)},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            except Exception as e:
-                return Response(
-                    {"error": "Unexpected error.", "details": str(e)},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class DeleteOrderProductView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -139,7 +101,7 @@ class DeleteOrderProductView(APIView):
         return self._delete_order_product_service
 
     def delete(self, request: Request, order_product_id: int) -> Response:
-        serializer = FindByIdAndDeleteOrderProductSerializer(order_product_id=order_product_id)
+        serializer = CheckIdSerializer(id=order_product_id, name="Order product")
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
