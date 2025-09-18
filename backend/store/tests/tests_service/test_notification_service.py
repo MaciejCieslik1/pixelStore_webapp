@@ -26,15 +26,18 @@ class TestFindAllNotificationsService:
         receiver_id = self.user1.user_id
         self.date = timezone.now()
         self.yesterday = self.date - datetime.timedelta(days=1)
-        notification1 = Notification(sender_id=sender_id, receiver_id=receiver_id, sent_date_time=self.date, text="notification1")
-        notification2 = Notification(sender_id=sender_id, receiver_id=receiver_id, sent_date_time=self.date, text="notification2")
-        notification3 = Notification(sender_id=sender_id, receiver_id=receiver_id, sent_date_time=self.yesterday, text="notification3")
-        notification1.save()
-        notification2.save()
-        notification3.save()
-        self.notifications_data = [{"username": "tester2", "sent_date_time": self.date, "text": "notification1"},
-                                   {"username": "tester2", "sent_date_time": self.date, "text": "notification2"},
-                                   {"username": "tester2", "sent_date_time": self.yesterday, "text": "notification3"}]
+        self.notification1 = Notification(sender_id=sender_id, receiver_id=receiver_id, sent_date_time=self.date, text="notification1")
+        self.notification2 = Notification(sender_id=sender_id, receiver_id=receiver_id, sent_date_time=self.date, text="notification2")
+        self.notification3 = Notification(sender_id=sender_id, receiver_id=receiver_id, sent_date_time=self.yesterday, text="notification3")
+        self.notification1.save()
+        self.notification2.save()
+        self.notification3.save()
+        self.notifications_data = [{"notification_id": self.notification1.notification_id, "sender_username": "tester2",
+            "sent_date_time": self.date.isoformat().replace("+00:00", "Z"), "text": "notification1"},
+            {"notification_id": self.notification2.notification_id,"sender_username": "tester2", "sent_date_time": self.date.isoformat().replace("+00:00", "Z"),
+                "text": "notification2"},
+            {"notification_id": self.notification3.notification_id, "sender_username": "tester2", "sent_date_time": self.yesterday.isoformat().replace("+00:00", "Z"),
+                "text": "notification3"}]
         self.data = {"date_from": None, "date_to": None, "order": "desc", "page": 1, "page_size": 10}
         self.service = FindAllNotificationsService()
 
@@ -50,9 +53,12 @@ class TestFindAllNotificationsService:
     def test_find_all_order_asc(self):
         notifications_before = Notification.objects.count()
         self.data["order"] = "asc"
-        self.notifications_data = [{"username": "tester2", "sent_date_time": self.yesterday, "text": "notification3"},
-                                   {"username": "tester2", "sent_date_time": self.date, "text": "notification1"},
-                                   {"username": "tester2", "sent_date_time": self.date, "text": "notification2"}]
+        self.notifications_data = [{"notification_id": self.notification3.notification_id, "sender_username": "tester2",
+            "sent_date_time": self.yesterday.isoformat().replace("+00:00", "Z"), "text": "notification3"},
+            {"notification_id": self.notification1.notification_id, "sender_username": "tester2", "sent_date_time": self.date.isoformat().replace("+00:00", "Z"),
+             "text": "notification1"},
+            {"notification_id": self.notification2.notification_id, "sender_username": "tester2", "sent_date_time": self.date.isoformat().replace("+00:00", "Z"),
+             "text": "notification2"}]
 
         result = self.service.find_all(self.token, self.user1, self.data)
         notifications_after = Notification.objects.count()
@@ -62,7 +68,7 @@ class TestFindAllNotificationsService:
 
     def test_find_all_filter_0_dates(self):
         notifications_before = Notification.objects.count()
-        self.data["date_to"] = self.date - datetime.timedelta(days=2)
+        self.data["date_to"] = (self.date - datetime.timedelta(days=2)).isoformat().replace("+00:00", "Z")
         self.notifications_data = []
 
         result = self.service.find_all(self.token, self.user1, self.data)
@@ -73,9 +79,9 @@ class TestFindAllNotificationsService:
 
     def test_find_all_filter_1_date(self):
         notifications_before = Notification.objects.count()
-        self.data["date_from"] = self.date - datetime.timedelta(days=1)
-        self.data["date_to"] = self.date - datetime.timedelta(days=1)
-        self.notifications_data = [{"username": "tester2", "sent_date_time": self.yesterday, "text": "notification3"}]
+        self.data["date_from"] = (self.date - datetime.timedelta(days=1)).isoformat().replace("+00:00", "Z")
+        self.data["date_to"] = (self.date - datetime.timedelta(days=1)).isoformat().replace("+00:00", "Z")
+        self.notifications_data = [{"notification_id": self.notification3.notification_id, "sender_username": "tester2", "sent_date_time": self.yesterday.isoformat().replace("+00:00", "Z"), "text": "notification3"}]
 
         result = self.service.find_all(self.token, self.user1, self.data)
         notifications_after = Notification.objects.count()
@@ -85,10 +91,12 @@ class TestFindAllNotificationsService:
 
     def test_find_all_filter_2_dates(self):
         notifications_before = Notification.objects.count()
-        self.data["date_from"] = self.date
-        self.data["date_to"] = self.date
-        self.notifications_data = [{"username": "tester2", "sent_date_time": self.date, "text": "notification1"},
-                                   {"username": "tester2", "sent_date_time": self.date, "text": "notification2"}]
+        self.data["date_from"] = self.date.isoformat().replace("+00:00", "Z")
+        self.data["date_to"] = self.date.isoformat().replace("+00:00", "Z")
+        self.notifications_data = [{"notification_id": self.notification1.notification_id, "sender_username": "tester2",
+            "sent_date_time": self.date.isoformat().replace("+00:00", "Z"), "text": "notification1"},
+            {"notification_id": self.notification2.notification_id, "sender_username": "tester2", "sent_date_time": self.date.isoformat().replace("+00:00", "Z"),
+            "text": "notification2"}]
 
         result = self.service.find_all(self.token, self.user1, self.data)
         notifications_after = Notification.objects.count()
@@ -98,11 +106,14 @@ class TestFindAllNotificationsService:
 
     def test_find_all_filter_3_dates(self):
         notifications_before = Notification.objects.count()
-        self.data["date_from"] = self.yesterday
-        self.data["date_to"] = self.date
-        self.notifications_data = [{"username": "tester2", "sent_date_time": self.date, "text": "notification1"},
-                                   {"username": "tester2", "sent_date_time": self.date, "text": "notification2"},
-                                   {"username": "tester2", "sent_date_time": self.yesterday, "text": "notification3"}]
+        self.data["date_from"] = self.yesterday.isoformat().replace("+00:00", "Z")
+        self.data["date_to"] = self.date.isoformat().replace("+00:00", "Z")
+        self.notifications_data = [{"notification_id": self.notification1.notification_id, "sender_username": "tester2",
+            "sent_date_time": self.date.isoformat().replace("+00:00", "Z"), "text": "notification1"},
+            {"notification_id": self.notification2.notification_id, "sender_username": "tester2", "sent_date_time": self.date.isoformat().replace("+00:00", "Z"),
+            "text": "notification2"},
+            {"notification_id": self.notification3.notification_id, "sender_username": "tester2", "sent_date_time": self.yesterday.isoformat().replace("+00:00", "Z"),
+             "text": "notification3"}]
 
         result = self.service.find_all(self.token, self.user1, self.data)
         notifications_after = Notification.objects.count()
@@ -113,7 +124,8 @@ class TestFindAllNotificationsService:
     def test_find_all_filter_1_page_1_page_size(self):
         notifications_before = Notification.objects.count()
         self.data["page_size"] = 1
-        self.notifications_data = [{"username": "tester2", "sent_date_time": self.date, "text": "notification1"}]
+        self.notifications_data = [{"notification_id": self.notification1.notification_id, "sender_username": "tester2",
+            "sent_date_time": self.date.isoformat().replace("+00:00", "Z"), "text": "notification1"}]
 
         result = self.service.find_all(self.token, self.user1, self.data)
         notifications_after = Notification.objects.count()
@@ -125,8 +137,10 @@ class TestFindAllNotificationsService:
         notifications_before = Notification.objects.count()
         self.data["page_size"] = 2
         self.data["order"] = "asc"
-        self.notifications_data = [{"username": "tester2", "sent_date_time": self.yesterday, "text": "notification3"},
-                                   {"username": "tester2", "sent_date_time": self.date, "text": "notification1"}]
+        self.notifications_data = [{"notification_id": self.notification3.notification_id,
+            "sender_username": "tester2", "sent_date_time": self.yesterday.isoformat().replace("+00:00", "Z"), "text": "notification3"},
+        {"notification_id": self.notification1.notification_id, "sender_username": "tester2", "sent_date_time": self.date.isoformat().replace("+00:00", "Z"),
+        "text": "notification1"}]
 
         result = self.service.find_all(self.token, self.user1, self.data)
         notifications_after = Notification.objects.count()
