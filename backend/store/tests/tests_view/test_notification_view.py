@@ -17,12 +17,13 @@ class TestFindAllNotifications:
 
     @patch("store.service.notification_service.FindAllNotificationsService.find_all")
     def test_find_all_success(self, mock_find_all):
-        mock_find_all.return_value = [{"sender_username": "tester2", "sent_date_time": "2025-08-31T12:00:00Z",
+        mock_find_all.return_value = [{"notification_id": 1, "sender_username": "tester2", "sent_date_time": "2025-08-31T12:00:00Z",
                                         "text": "Hello"}]
 
         response = self.client.get("/notification/find_all/")
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.data[0]["notification_id"] == 1
         assert response.data[0]["sender_username"] == "tester2"
         assert response.data[0]["sent_date_time"] == "2025-08-31T12:00:00Z"
         assert response.data[0]["text"] == "Hello"

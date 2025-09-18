@@ -5,6 +5,7 @@ from store.exceptions import NotificationIdDoesNotBelongToUserError, SelfUsernam
     InvalidNotificationIdError
 from store.helper_classes.authentication_helper import TokenUtils
 from store.models import User, Notification
+from store.output_serializers.notification_output_serializer import NotificationOutputSerializer
 
 
 class FindAllNotificationsService:
@@ -28,8 +29,7 @@ class FindAllNotificationsService:
         else:
             notifications = notifications.order_by("sent_date_time", "notification_id")
 
-        response = [{"username": notification.sender.username, "sent_date_time": notification.sent_date_time,
-                "text": notification.text} for notification in notifications]
+        response = [NotificationOutputSerializer(notification).data for notification in notifications]
 
         paginator = Paginator(response, page_size)
         page_obj = paginator.get_page(page)

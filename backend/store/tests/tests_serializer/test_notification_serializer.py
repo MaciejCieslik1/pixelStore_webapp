@@ -275,7 +275,7 @@ class TestCreateNotificationSerializer(unittest.TestCase):
 
         self.assertFalse(result)
         self.assertNotEqual(serializer.validated_data, self.validated_data)
-        self.assertEqual(serializer.errors, {"username": "Username is not provided."})
+        self.assertEqual(serializer.errors, {"username": "Username must be string."})
 
     def test_create_notification_empty_text(self):
         self.data["text"] = ""
