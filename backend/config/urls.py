@@ -23,5 +23,6 @@ urlpatterns = [
     path('address/', include('store.urls.address_urls')),
     path('category/', include('store.urls.category_urls')),
     path('notification/', include('store.urls.notification_urls')),
-    path('order_product/', include('store.urls.order_product_urls'))
+    path('order_product/', include('store.urls.order_product_urls')),
+    path('order_return/', include('store.urls.order_return_urls'))
 ]
