@@ -12,5 +12,5 @@ class CreateOrderReturnService:
 
 
 class UpdateOrderReturnService:
-    def delete(self, token : str, user: User, order_return_id: int) -> str:
+    def update(self, token : str, user: User, order_return_id: int) -> str:
         pass
