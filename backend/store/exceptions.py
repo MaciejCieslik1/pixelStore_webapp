@@ -85,3 +85,6 @@ class NotificationIdDoesNotBelongToUserError(ValueError):
 
 class InvalidInputData(ValueError):
     pass
+
+class NotEnoughFundsError(ValueError):
+    pass
