@@ -11,12 +11,12 @@ create_contact_service = CreateContactService()
 delete_contact_by_name_service = DeleteContactByNameService()
 
 urlpatterns = [
-    path("find_by_username/<str:username>/", FindContactByNameView.as_view(find_contact_by_username_service=find_contact_by_name_service),
+    path("find_by_username/<str:username>/", FindContactByNameView.as_view(find_contact_by_name_service=find_contact_by_name_service),
          name="contact_find_by_username/<str:username>/"),
     path("find_all/", FindAllContactsView.as_view(find_all_contacts_service=find_all_contacts_service),
          name="contact_find_all"),
     path("create/", CreateContactView.as_view(create_contact_service=create_contact_service),
          name="contact_create"),
-    path("delete_by_username/<str:username>/", DeleteContactByNameView.as_view(delete_contact_by_username_service=delete_contact_by_name_service),
+    path("delete_by_username/<str:username>/", DeleteContactByNameView.as_view(delete_contact_by_name_service=delete_contact_by_name_service),
          name="contact_delete_by_username/<str:username>/"),
 ]
