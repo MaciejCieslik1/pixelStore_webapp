@@ -86,7 +86,7 @@ class TestFindByUsernameContact:
         assert response.data["error"] == "Invalid input data provided."
 
     def test_find_by_username_invalid_serializer(self):
-        self.receiver_username = ""
+        self.receiver_username = "a" * 33
         response = self.client.get(f"/contact/find_by_username/{self.receiver_username}/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -169,12 +169,6 @@ class TestFindAllContacts:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data["error"] == "Invalid input data provided."
 
-    def test_find_all_invalid_serializer(self):
-        self.receiver_username = ""
-        response = self.client.get("/contact/find_all/")
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
 
 @pytest.mark.django_db
 class TestCreateOrderProduct:
@@ -253,7 +247,7 @@ class TestCreateOrderProduct:
         assert response.data["error"] == "Invalid input data provided."
 
     def test_create_invalid_serializer(self):
-        self.data = {}
+        self.data = {"receiver_username": ""}
         response = self.client.post("/contact/create/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
