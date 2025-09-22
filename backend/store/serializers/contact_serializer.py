@@ -17,4 +17,13 @@ class CreateContactSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return True
+        if not self.data["receiver_username"]:
+            self.errors["receiver_username"] = "Username cannot be empty."
+        elif not isinstance(self.data["receiver_username"], str):
+            self.errors["receiver_username"] = "Username must be a string."
+        elif len(self.data["receiver_username"].strip()) > 32:
+            self.errors["receiver_username"] = "Username cannot be longer than 32 characters."
+        else:
+            self.validated_data["receiver_username"] = self.data["receiver_username"].strip()
+            return True
+        return False
