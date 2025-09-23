@@ -98,6 +98,7 @@ class TestFindAllContacts:
         self.client, self.user = create_api_client_with_user()
         self.contact = ContactTestHelper.create_contact(self.user)
         self.receiver_username = self.contact.receiver.username
+        self.data = {"page": 1, "page_size": 10}
 
     @patch("store.service.contact_service.FindAllContactsService.find_all")
     def test_find_all_success(self, mock_find_all):
@@ -106,7 +107,7 @@ class TestFindAllContacts:
                 "receiver_username": self.receiver_username},
             {"contact_id": self.contact.contact_id + 1, "sender_username": self.contact.sender.username,
                 "receiver_username": "example_username"}]
-        response = self.client.get("/contact/find_all/")
+        response = self.client.get("/contact/find_all/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_200_OK
         assert len(response.data) == 2
@@ -119,7 +120,7 @@ class TestFindAllContacts:
     def test_find_all_invalid_token(self, mock_find_all):
         mock_find_all.side_effect = IncorrectTokenError("Access token error.")
 
-        response = self.client.get("/contact/find_all/")
+        response = self.client.get("/contact/find_all/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -128,7 +129,7 @@ class TestFindAllContacts:
     def test_find_all_expired_token(self, mock_find_all):
         mock_find_all.side_effect = TokenExpiredError("Access token error.")
 
-        response = self.client.get("/contact/find_all/")
+        response = self.client.get("/contact/find_all/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -137,7 +138,7 @@ class TestFindAllContacts:
     def test_find_all_cannot_get_token_from_request(self, mock_find_all):
         mock_find_all.side_effect = CannotGetTokenFromRequestError("Access token error.")
 
-        response = self.client.get("/contact/find_all/")
+        response = self.client.get("/contact/find_all/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -146,7 +147,7 @@ class TestFindAllContacts:
     def test_find_all_token_expired_by_replacement(self, mock_find_all):
         mock_find_all.side_effect = TokenExpiredByReplacementError("Access token error.")
 
-        response = self.client.get("/contact/find_all/")
+        response = self.client.get("/contact/find_all/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -155,7 +156,7 @@ class TestFindAllContacts:
     def test_find_all_other_exception(self, mock_find_all):
         mock_find_all.side_effect = DatabaseError("DB connection failed")
 
-        response = self.client.get("/contact/find_all/")
+        response = self.client.get("/contact/find_all/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.data["error"] == "Unexpected error."
@@ -164,10 +165,16 @@ class TestFindAllContacts:
     def test_find_all_invalid_input_data(self, mock_find_all):
         mock_find_all.side_effect = InvalidInputData("Invalid input data provided.")
 
-        response = self.client.get("/contact/find_all/")
+        response = self.client.get("/contact/find_all/", data=self.data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data["error"] == "Invalid input data provided."
+
+    def test_find_all_invalid_serializer(self):
+        self.data = {"page": "dwggwr", "page_size": "efwwe"}
+        response = self.client.get("/contact/find_all/", data=self.data, format="json")
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
