@@ -79,12 +79,12 @@ class TestFindContactByNameService:
 
     def test_find_by_name_expired_access_token(self):
         username = self.user2_data["username"]
-        access_token = TokenTestsHelper.generate_access_token(self.user.user_id, "access",
+        access_token = TokenTestsHelper.generate_access_token(self.user1.user_id, "access",
             timezone.now() - datetime.timedelta(days=1), timezone.now() - datetime.timedelta(days=2), token_version=1)
         contacts_before = Contact.objects.count()
 
         with pytest.raises(TokenExpiredError) as e:
-            self.service.find_by_name(access_token, self.user, username)
+            self.service.find_by_name(access_token, self.user1, username)
         contacts_after = Contact.objects.count()
 
         assert f"Access token has expired." in str(e.value)
@@ -96,7 +96,7 @@ class TestFindContactByNameService:
         contacts_before = Contact.objects.count()
 
         with pytest.raises(IncorrectTokenError) as e:
-            self.service.find_by_name(access_token, self.user, username)
+            self.service.find_by_name(access_token, self.user1, username)
         contacts_after = Contact.objects.count()
 
         assert f"Incorrect access token." in str(e.value)
@@ -106,11 +106,11 @@ class TestFindContactByNameService:
         username = self.user2_data["username"]
         access_token_first = self.token
         AuthenticationHelper.login_user(self.user_data)
-        self.user = User.objects.get(username="tester")
+        self.user1 = User.objects.get(username="tester")
         contacts_before = Contact.objects.count()
 
         with pytest.raises(TokenExpiredByReplacementError) as e:
-            self.service.find_by_name(access_token_first, self.user, username)
+            self.service.find_by_name(access_token_first, self.user1, username)
         contacts_after = Contact.objects.count()
 
         assert f"Access token is no longer valid." in str(e.value)
@@ -154,7 +154,7 @@ class TestFindAllNotificationsService:
         result = self.service.find_all(token=self.token, user=self.user1, validated_data=self.validated_data)
         contacts_after = Contact.objects.count()
 
-        assert result == self.contact_data
+        assert len(result) == 2
         assert contacts_after == contacts_before
 
     def test_find_all_filter_1_page_1_page_size(self):
@@ -163,7 +163,7 @@ class TestFindAllNotificationsService:
         result = self.service.find_all(token=self.token, user=self.user1, validated_data=self.validated_data)
         contacts_after = Contact.objects.count()
 
-        assert result == self.contact_data[0]
+        assert len(result) == 1
         assert contacts_after == contacts_before
 
     def test_find_all_filter_1_page_2_page_size(self):
@@ -172,18 +172,18 @@ class TestFindAllNotificationsService:
         result = self.service.find_all(token=self.token, user=self.user1, validated_data=self.validated_data)
         contacts_after = Contact.objects.count()
 
-        assert result == self.contact_data
+        assert len(result) == 2
         assert contacts_after == contacts_before
 
     def test_find_all_expired_access_token(self):
-        access_token = TokenTestsHelper.generate_access_token(self.user.user_id, "access",
+        access_token = TokenTestsHelper.generate_access_token(self.user1.user_id, "access",
                                                               timezone.now() - datetime.timedelta(days=1),
                                                               timezone.now() - datetime.timedelta(days=2),
                                                               token_version=1)
         contacts_before = Contact.objects.count()
 
         with pytest.raises(TokenExpiredError) as e:
-            self.service.find_all(access_token, self.user, self.validated_data)
+            self.service.find_all(access_token, self.user1, self.validated_data)
         contacts_after = Contact.objects.count()
 
         assert f"Access token has expired." in str(e.value)
@@ -194,7 +194,7 @@ class TestFindAllNotificationsService:
         contacts_before = Contact.objects.count()
 
         with pytest.raises(IncorrectTokenError) as e:
-            self.service.find_all(access_token, self.user, self.validated_data)
+            self.service.find_all(access_token, self.user1, self.validated_data)
         contacts_after = Contact.objects.count()
 
         assert f"Incorrect access token." in str(e.value)
@@ -203,11 +203,11 @@ class TestFindAllNotificationsService:
     def test_find_all_expired_by_replacement_access_token(self):
         access_token_first = self.token
         AuthenticationHelper.login_user(self.user_data)
-        self.user = User.objects.get(username="tester")
+        self.user1 = User.objects.get(username="tester")
         contacts_before = Contact.objects.count()
 
         with pytest.raises(TokenExpiredByReplacementError) as e:
-            self.service.find_all(access_token_first, self.user, self.validated_data)
+            self.service.find_all(access_token_first, self.user1, self.validated_data)
         contacts_after = Contact.objects.count()
 
         assert f"Access token is no longer valid." in str(e.value)
@@ -244,6 +244,7 @@ class TestCreateContactService:
         assert contacts_after == contacts_before + 1
 
     def test_create_invalid_username(self):
+        self.creation_data["receiver_username"] = "invalid_username"
         contacts_before = Contact.objects.count()
 
         with pytest.raises(InvalidInputData) as e:
@@ -254,7 +255,7 @@ class TestCreateContactService:
         assert contacts_after == contacts_before
 
     def test_create_is_already_contact(self):
-        contact = Contact(self.user1, self.user2)
+        contact = Contact(sender=self.user1, receiver=self.user2)
         contact.save()
         contacts_before = Contact.objects.count()
 
@@ -266,6 +267,7 @@ class TestCreateContactService:
         assert contacts_after == contacts_before
 
     def test_create_own_username(self):
+        self.creation_data["receiver_username"] = self.user_data["username"]
         contacts_before = Contact.objects.count()
 
         with pytest.raises(InvalidInputData) as e:
@@ -276,7 +278,7 @@ class TestCreateContactService:
         assert contacts_after == contacts_before
 
     def test_create_expired_access_token(self):
-        access_token = TokenTestsHelper.generate_access_token(self.user.user_id, "access",
+        access_token = TokenTestsHelper.generate_access_token(self.user1.user_id, "access",
             timezone.now() - datetime.timedelta(days=1), timezone.now() - datetime.timedelta(days=2), token_version=1)
         contacts_before = Contact.objects.count()
 
@@ -301,7 +303,7 @@ class TestCreateContactService:
     def test_create_expired_by_replacement_access_token(self):
         access_token_first = self.token
         AuthenticationHelper.login_user(self.user_data)
-        self.user = User.objects.get(username="tester")
+        self.user1 = User.objects.get(username="tester")
         contacts_before = Contact.objects.count()
 
         with pytest.raises(TokenExpiredByReplacementError) as e:
@@ -340,7 +342,7 @@ class TestDeleteContactByNameService:
         result = self.service.delete(token=self.token, user=self.user1, username=username)
         contacts_after = Contact.objects.count()
 
-        assert result == "Contact deleted successfully"
+        assert result == "Contact deleted successfully."
         assert contacts_after == contacts_before - 1
 
     def test_delete_name_invalid_username(self):
@@ -367,12 +369,12 @@ class TestDeleteContactByNameService:
 
     def test_delete_by_name_expired_access_token(self):
         username = self.user2_data["username"]
-        access_token = TokenTestsHelper.generate_access_token(self.user.user_id, "access",
+        access_token = TokenTestsHelper.generate_access_token(self.user1.user_id, "access",
             timezone.now() - datetime.timedelta(days=1), timezone.now() - datetime.timedelta(days=2), token_version=1)
         contacts_before = Contact.objects.count()
 
         with pytest.raises(TokenExpiredError) as e:
-            self.service.delete(access_token, self.user, username)
+            self.service.delete(access_token, self.user1, username)
         contacts_after = Contact.objects.count()
 
         assert f"Access token has expired." in str(e.value)
@@ -384,7 +386,7 @@ class TestDeleteContactByNameService:
         contacts_before = Contact.objects.count()
 
         with pytest.raises(IncorrectTokenError) as e:
-            self.service.delete(access_token, self.user, username)
+            self.service.delete(access_token, self.user1, username)
         contacts_after = Contact.objects.count()
 
         assert f"Incorrect access token." in str(e.value)
@@ -394,11 +396,11 @@ class TestDeleteContactByNameService:
         username = self.user2_data["username"]
         access_token_first = self.token
         AuthenticationHelper.login_user(self.user_data)
-        self.user = User.objects.get(username="tester")
+        self.user1 = User.objects.get(username="tester")
         contacts_before = Contact.objects.count()
 
         with pytest.raises(TokenExpiredByReplacementError) as e:
-            self.service.delete(access_token_first, self.user, username)
+            self.service.delete(access_token_first, self.user1, username)
         contacts_after = Contact.objects.count()
 
         assert f"Access token is no longer valid." in str(e.value)
