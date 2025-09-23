@@ -9,6 +9,7 @@ from store.exceptions import IncorrectTokenError, TokenExpiredError, CannotGetTo
 from store.helper_classes.authentication_helper import TokenUtils
 from store.serializers.check_username_serializer import CheckUsernameSerializer
 from store.serializers.contact_serializer import CreateContactSerializer
+from store.serializers.page_serializer import PageSerializer
 from store.service.contact_service import FindContactByNameService, FindAllContactsService, CreateContactService, \
     DeleteContactByNameService
 
@@ -63,26 +64,30 @@ class FindAllContactsView(APIView):
         return self._find_all_contacts_service
 
     def get(self, request: Request) -> Response:
-        try:
-            token = TokenUtils.get_jwt_token_from_request(request)
-            contacts_found = self.find_all_contacts_service.find_all(token, request.user)
-            return Response(contacts_found, status=status.HTTP_200_OK)
-        except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
-                TokenExpiredByReplacementError) as e:
-            return Response(
-                {"error": "Access token error.", "details": str(e)},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        except InvalidInputData as e:
-            return Response(
-                {"error": "Invalid input data provided.", "details": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return Response(
-                {"error": "Unexpected error.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        serializer = PageSerializer(data=request.query_params)
+        if serializer.is_valid():
+            try:
+                token = TokenUtils.get_jwt_token_from_request(request)
+                contacts_found = self.find_all_contacts_service.find_all(token, request.user, serializer.validated_data)
+                return Response(contacts_found, status=status.HTTP_200_OK)
+            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
+                    TokenExpiredByReplacementError) as e:
+                return Response(
+                    {"error": "Access token error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except InvalidInputData as e:
+                return Response(
+                    {"error": "Invalid input data provided.", "details": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateContactView(APIView):
