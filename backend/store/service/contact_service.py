@@ -6,7 +6,7 @@ class FindContactByNameService:
 
 
 class FindAllContactsService:
-    def find_all(self, token: str, user: User) -> list:
+    def find_all(self, token: str, user: User, validated_data: dict) -> list:
         pass
 
 
