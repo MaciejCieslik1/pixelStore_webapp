@@ -288,7 +288,6 @@ class TestUpdateOrderReturnService:
         assert order_returns_before == order_returns_after
         assert notifications_count_before == notifications_count_after
 
-
     def test_update_expired_access_token(self):
         access_token = TokenTestsHelper.generate_access_token(self.user.user_id, "access",
             timezone.now() - datetime.timedelta(days=1), timezone.now() - datetime.timedelta(days=2), token_version=1)
@@ -304,7 +303,7 @@ class TestUpdateOrderReturnService:
         assert order_returns_before == order_returns_after
         assert notifications_count_before == notifications_count_after
 
-    def test_find_by_id_incorrect_access_token(self):
+    def test_update_incorrect_access_token(self):
         access_token = "invalid token"
         order_returns_before = OrderReturn.objects.count()
 
@@ -318,7 +317,7 @@ class TestUpdateOrderReturnService:
         assert order_returns_before == order_returns_after
         assert notifications_count_before == notifications_count_after
 
-    def test_find_by_id_expired_by_replacement_access_token(self):
+    def test_update_expired_by_replacement_access_token(self):
         access_token_first = self.token
         AuthenticationHelper.login_user(self.user_data)
         self.user = User.objects.get(username="tester")
