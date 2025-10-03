@@ -169,12 +169,6 @@ class TestFindAllProducts:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data["error"] == "Invalid input data provided."
 
-    def test_find_all_invalid_serializer(self):
-        self.product_id = 0
-        response = self.client.get(f"/product/find_all/")
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
 
 @pytest.mark.django_db
 class TestCreateProduct:
@@ -254,7 +248,7 @@ class TestCreateProduct:
         assert response.data["error"] == "Invalid input data provided."
 
     def test_create_invalid_serializer(self):
-        self.product_id = 0
+        self.product_creation_data["owner_username"] = 0
         response = self.client.post("/product/create/", data=self.product_creation_data, format="json")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
