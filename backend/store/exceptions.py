@@ -88,3 +88,6 @@ class InvalidInputData(ValueError):
 
 class NotEnoughFundsError(ValueError):
     pass
+
+class InvalidIdError(ValueError):
+    pass
