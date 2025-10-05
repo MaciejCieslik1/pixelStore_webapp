@@ -13,7 +13,7 @@ delete_service = DeleteProductPhotoService()
 urlpatterns = [
     path("find_by_id/<int:product_photo_id>/", FindByIdProductPhotoView.as_view(find_by_id_product_photo_service=find_by_id_product_photo_service),
          name="find_by_id_product_photo/<int:product_photo_id>"),
-    path("find_all_for_product/", FindAllForProductView.as_view(find_all_fpr_product_service=find_all_for_product_service),
+    path("find_all_for_product/", FindAllForProductView.as_view(find_all_for_product_service=find_all_for_product_service),
          name="find_all_for_product"),
     path("create/", CreateProductPhotoView.as_view(create_product_photo_service=create_service), name="create_product_photo"),
     path("delete/<int:product_photo_id>/", DeleteProductPhotoView.as_view(delete_product_photo_service=delete_service),
