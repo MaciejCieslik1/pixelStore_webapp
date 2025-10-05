@@ -13,7 +13,7 @@ delete_service = DeleteProductService()
 
 urlpatterns = [
     path("find_by_id/<int:product_id>/", FindByIdProductView.as_view(find_by_id_product_service=find_by_id_product_service),
-         name="find_by_id_product/<int:order_return_id>"),
+         name="find_by_id_product/<int:product_id>"),
     path("find_all/", FindAllProductsView.as_view(find_all_products_service=find_all_products_service),
          name="find_all_products"),
     path("create/", CreateProductView.as_view(create_product_service=create_service), name="create_product"),
