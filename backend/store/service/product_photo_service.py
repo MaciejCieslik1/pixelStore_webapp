@@ -7,7 +7,7 @@ class FindByIdProductPhotoService:
 
 
 class FindAllForProductService:
-    def find_all_for_product(self, token: str, user: User, validated_data: dict) -> list[dict]:
+    def find_all_for_product(self, token: str, user: User, product_id: int) -> list[dict]:
         pass
 
 
