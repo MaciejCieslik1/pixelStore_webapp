@@ -8,7 +8,7 @@ from store.exceptions import IncorrectTokenError, TokenExpiredError, CannotGetTo
     TokenExpiredByReplacementError, InvalidInputData
 from store.helper_classes.authentication_helper import TokenUtils
 from store.serializers.check_id_serializer import CheckIdSerializer
-from store.serializers.product_photo_serializer import FindAllProductPhotosSerializer, CreateProductPhotoSerializer
+from store.serializers.product_photo_serializer import CreateProductPhotoSerializer
 from store.service.product_photo_service import FindByIdProductPhotoService, FindAllForProductService, \
     CreateProductPhotoService, DeleteProductPhotoService
 
@@ -62,12 +62,12 @@ class FindAllForProductView(APIView):
     def find_all_for_product_service(self):
         return self._find_all_for_product_service
 
-    def get(self, request: Request) -> Response:
-        serializer = FindAllProductPhotosSerializer(data=request.query_params)
+    def get(self, request: Request, product_id: int) -> Response:
+        serializer = CheckIdSerializer(id=product_id, name="Product")
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
-                products_found = self.find_all_for_product_service.find_all_for_product(token, request.user, serializer.validated_data)
+                products_found = self.find_all_for_product_service.find_all_for_product(token, request.user, product_id)
                 return Response(products_found, status=status.HTTP_200_OK)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
@@ -86,7 +86,7 @@ class FindAllForProductView(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CreateProductPhotoView(APIView):
