@@ -92,11 +92,12 @@ class TestFindByIdProductPhoto:
 
 
 @pytest.mark.django_db
-class TestFindAllProducts:
+class TestFindAllProductPhotos:
     def setup_method(self):
         self.client, self.user = create_api_client_with_user()
         self.product_photo = ProductPhotoTestHelper.create_product_photo(self.user)
         self.product_photo_id = self.product_photo.product_photo_id
+        self.product_id = self.product_photo.product.product_id
         self.product_photos_data = [{"product_photo_id": self.product_photo_id,
             "product_id": self.product_photo.product.product_id, "image_url": self.product_photo.image_url,
             "is_main_photo": self.product_photo.is_main_photo}]
@@ -105,7 +106,7 @@ class TestFindAllProducts:
     def test_find_all_for_product_success(self, mock_find_all):
         mock_find_all.return_value = self.product_photos_data
 
-        response = self.client.get("/product_photo/find_all_for_product/")
+        response = self.client.get(f"/product_photo/find_all_for_product/{self.product_id}/")
 
         assert response.status_code == status.HTTP_200_OK
         assert response.data == self.product_photos_data
@@ -115,7 +116,7 @@ class TestFindAllProducts:
     def test_find_all_for_product_invalid_token(self, mock_find_all):
         mock_find_all.side_effect = IncorrectTokenError("Access token error.")
 
-        response = self.client.get("/product_photo/find_all_for_product/")
+        response = self.client.get(f"/product_photo/find_all_for_product/{self.product_id}/")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -124,7 +125,7 @@ class TestFindAllProducts:
     def test_find_all_for_product_expired_token(self, mock_find_all):
         mock_find_all.side_effect = TokenExpiredError("Access token error.")
 
-        response = self.client.get("/product_photo/find_all_for_product/")
+        response = self.client.get(f"/product_photo/find_all_for_product/{self.product_id}/")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -133,7 +134,7 @@ class TestFindAllProducts:
     def test_find_all_for_product_cannot_get_token_from_request(self, mock_find_all):
         mock_find_all.side_effect = CannotGetTokenFromRequestError("Access token error.")
 
-        response = self.client.get("/product_photo/find_all_for_product/")
+        response = self.client.get(f"/product_photo/find_all_for_product/{self.product_id}/")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -142,7 +143,7 @@ class TestFindAllProducts:
     def test_find_all_for_product_token_expired_by_replacement(self, mock_find_all):
         mock_find_all.side_effect = TokenExpiredByReplacementError("Access token error.")
 
-        response = self.client.get("/product_photo/find_all_for_product/")
+        response = self.client.get(f"/product_photo/find_all_for_product/{self.product_id}/")
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
         assert response.data["error"] == "Access token error."
@@ -151,7 +152,7 @@ class TestFindAllProducts:
     def test_find_all_for_product_other_exception(self, mock_find_all):
         mock_find_all.side_effect = DatabaseError("DB connection failed")
 
-        response = self.client.get("/product_photo/find_all_for_product/")
+        response = self.client.get(f"/product_photo/find_all_for_product/{self.product_id}/")
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert response.data["error"] == "Unexpected error."
@@ -160,14 +161,14 @@ class TestFindAllProducts:
     def test_find_all_for_product_invalid_input_data(self, mock_find_all):
         mock_find_all.side_effect = InvalidInputData("Invalid input data provided.")
 
-        response = self.client.get("/product_photo/find_all_for_product/")
+        response = self.client.get(f"/product_photo/find_all_for_product/{self.product_id}/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert response.data["error"] == "Invalid input data provided."
 
 
 @pytest.mark.django_db
-class TestCreateProduct:
+class TestCreateProductPhoto:
     def setup_method(self):
         self.client, self.user = create_api_client_with_user()
         self.product_photo = ProductPhotoTestHelper.create_product_photo(self.user)
@@ -251,7 +252,7 @@ class TestCreateProduct:
 
 
 @pytest.mark.django_db
-class TestDeleteProduct:
+class TestDeleteProductPhoto:
     def setup_method(self):
         self.client, self.user = create_api_client_with_user()
         self.product_photo = ProductPhotoTestHelper.create_product_photo(self.user)
@@ -323,7 +324,7 @@ class TestDeleteProduct:
         assert response.data["error"] == "Invalid input data provided."
 
     def test_delete_invalid_serializer(self):
-        self.product_id = 0
+        self.product_photo_id = 0
         response = self.client.delete(f"/product_photo/delete/{self.product_photo_id}/")
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
