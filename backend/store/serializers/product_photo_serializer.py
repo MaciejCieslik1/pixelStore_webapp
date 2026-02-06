@@ -1,6 +1,3 @@
-from store.helper_classes.serializer_id_checker import SerializerHelper
-
-
 class CreateProductPhotoSerializer:
     def __init__(self, data: dict):
         self._data = data
