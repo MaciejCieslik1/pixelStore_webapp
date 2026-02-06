@@ -10,7 +10,7 @@ from store.helper_classes.authentication_helper import TokenUtils
 from store.serializers.check_id_serializer import CheckIdSerializer
 from store.serializers.product_photo_serializer import CreateProductPhotoSerializer
 from store.service.product_photo_service import FindByIdProductPhotoService, FindAllForProductService, \
-    CreateProductPhotoService, DeleteProductPhotoService
+    CreateProductPhotoService, DeleteProductPhotoService, FindMainPhotoProductPhotoService
 
 
 class FindByIdProductPhotoView(APIView):
@@ -29,8 +29,8 @@ class FindByIdProductPhotoView(APIView):
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
-                product_found = self.find_by_id_product_photo_service.find_by_id(token, request.user, product_photo_id)
-                return Response(product_found, status=status.HTTP_200_OK)
+                product_photo_found = self.find_by_id_product_photo_service.find_by_id(token, request.user, product_photo_id)
+                return Response(product_photo_found, status=status.HTTP_200_OK)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
                 return Response(
@@ -67,8 +67,46 @@ class FindAllForProductView(APIView):
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
-                products_found = self.find_all_for_product_service.find_all_for_product(token, request.user, product_id)
-                return Response(products_found, status=status.HTTP_200_OK)
+                product_photos_found = self.find_all_for_product_service.find_all_for_product(token, request.user, product_id)
+                return Response(product_photos_found, status=status.HTTP_200_OK)
+            except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
+                    TokenExpiredByReplacementError) as e:
+                return Response(
+                    {"error": "Access token error.", "details": str(e)},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            except InvalidInputData as e:
+                return Response(
+                    {"error": "Invalid input data provided.", "details": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                return Response(
+                    {"error": "Unexpected error.", "details": str(e)},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        else:
+            return Response(serializer.error, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FindMainPhotoProductPhotoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def __init__(self, find_main_photo_product_photo_service: FindMainPhotoProductPhotoService, **kwargs):
+        super().__init__(**kwargs)
+        self._find_by_id_product_photo_service = find_main_photo_product_photo_service
+
+    @property
+    def find_main_photo_product_photo_service(self):
+        return self._find_by_id_product_photo_service
+
+    def get(self, request: Request, product_id: int) -> Response:
+        serializer = CheckIdSerializer(id=product_id, name="Product")
+        if serializer.is_valid():
+            try:
+                token = TokenUtils.get_jwt_token_from_request(request)
+                product_photo_found = self.find_main_photo_product_photo_service.find_main_photo(token, request.user, product_id)
+                return Response(product_photo_found, status=status.HTTP_200_OK)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
                 return Response(
