@@ -1,4 +1,5 @@
 from store.helper_classes.serializer_id_checker import SerializerHelper
+from store.serializers.check_id_serializer import CheckIdSerializer
 from store.serializers.check_username_serializer import CheckUsernameSerializer
 
 
@@ -21,20 +22,7 @@ class FindAllProductReviewsSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        error_messages_product_id = {"empty": "Product id cannot be empty.",
-                                     "not_positive_int": "Product id must be positive integer."}
-
-        return (self._validate_product_id("product_id", error_messages_product_id) and self._validate_page() and
-                self._validate_page_size())
-
-    def _validate_product_id(self, key: str, error_messages: dict) -> bool:
-        error = SerializerHelper.return_id_error(self.data.get(key), error_messages)
-        if error:
-            self.errors[key] = error
-            return False
-        self.validated_data[key] = self.data[key]
-        return True
-
+        return self._validate_page() and self._validate_page_size()
 
     def _validate_page(self):
         page = self.data.get("page", 1)
@@ -86,19 +74,7 @@ class FindAllFromUserProductReviewsSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return self._validate_username() and self._validate_page() and self._validate_page_size()
-
-    def _validate_username(self) -> bool:
-        username = self.data.get("username")
-        if username is None:
-            self.validated_data["username"] = None
-            return True
-        username_serializer = CheckUsernameSerializer(username)
-        result = username_serializer.is_valid()
-        self.validated_data["username"] = username_serializer.validated_username
-        if username_serializer.error:
-            self.errors["username"] = username_serializer.error
-        return result
+        return self._validate_page() and self._validate_page_size()
 
     def _validate_page(self):
         page = self.data.get("page", 1)
@@ -150,7 +126,16 @@ class CreateProductReviewSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return self._validate_rating() and self._validate_description()
+        return self._validate_product_id() and self._validate_rating() and self._validate_description()
+
+    def _validate_product_id(self) -> bool:
+        product_id = self.data.get("product_id")
+        id_serializer = CheckIdSerializer(product_id, "Product")
+        if id_serializer.is_valid():
+            self.validated_data["product_id"] = product_id
+            return True
+        self.errors["product_id"] = id_serializer.error
+        return False
 
     def _validate_rating(self) -> bool:
         rating = self.data.get("rating")
