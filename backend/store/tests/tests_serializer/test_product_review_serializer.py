@@ -6,8 +6,8 @@ from store.serializers.product_review_serializer import FindAllProductReviewsSer
 
 class TestFindAllProductReviewsSerializer(unittest.TestCase):
     def setUp(self):
-        self.data = {"product_id": 1, "page": 2, "page_size": 20}
-        self.validated_data = {"product_id": 1, "page": 2, "page_size": 20}
+        self.data = {"page": 2, "page_size": 20}
+        self.validated_data = {"page": 2, "page_size": 20}
 
 
     def test_find_all_success(self):
@@ -22,8 +22,8 @@ class TestFindAllProductReviewsSerializer(unittest.TestCase):
 
 class TestFindAllFromUserProductReviewsSerializer(unittest.TestCase):
     def setUp(self):
-        self.data = {"username": "tester", "page": 2, "page_size": 20}
-        self.validated_data = {"username": "tester", "page": 2, "page_size": 20}
+        self.data = {"page": 2, "page_size": 20}
+        self.validated_data = {"page": 2, "page_size": 20}
 
 
     def test_find_all_from_user_success(self):
@@ -38,8 +38,8 @@ class TestFindAllFromUserProductReviewsSerializer(unittest.TestCase):
 
 class TestCreateProductReviewSerializer(unittest.TestCase):
     def setUp(self):
-        self.data = {"rating": 1.0, "description": "example"}
-        self.validated_data = {"rating": 1, "description": "example"}
+        self.data = {"product_id": 1, "rating": 1.0, "description": "example"}
+        self.validated_data = {"product_id": 1, "rating": 1, "description": "example"}
 
     def test_create_success(self):
         serializer = CreateProductReviewSerializer(data=self.data)
@@ -51,7 +51,7 @@ class TestCreateProductReviewSerializer(unittest.TestCase):
         self.assertEqual(serializer.errors, {})
 
     def test_create_success_delete_spaces(self):
-        self.data = {"rating": 1.0, "description": "   example   "}
+        self.data = {"product_id": 1, "rating": 1.0, "description": "   example   "}
         serializer = CreateProductReviewSerializer(data=self.data)
 
         result = serializer.is_valid()
