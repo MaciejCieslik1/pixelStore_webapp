@@ -71,7 +71,9 @@ class FindAllProductReviewsView(APIView):
         if serializer.is_valid() and id_serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
-                product_reviews_found = self.find_all_product_reviews_service.find_all(token, request.user, serializer.validated_data)
+                validated_data = serializer.validated_data
+                validated_data["product_id"] = product_id
+                product_reviews_found = self.find_all_product_reviews_service.find_all(token, request.user, validated_data)
                 return Response(product_reviews_found, status=status.HTTP_200_OK)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
@@ -110,8 +112,10 @@ class FindAllFromUserProductReviewsView(APIView):
         if serializer.is_valid() and username_serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
+                validated_data = serializer.validated_data
+                validated_data["reviewer_username"] = reviewer_username
                 product_reviews_found = self.find_all_from_user_product_reviews_service.find_all(token, request.user,
-                                                                                serializer.validated_data)
+                                                                                                 validated_data)
                 return Response(product_reviews_found, status=status.HTTP_200_OK)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
