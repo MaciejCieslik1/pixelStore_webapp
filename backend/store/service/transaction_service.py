@@ -11,7 +11,7 @@ class FindByIdTransactionService:
 
 
 class FindAllMineTransactionsService:
-    def find_all(self, token: str, user: User) -> list[dict]:
+    def find_all_mine(self, token: str, user: User, validated_data: dict) -> list[dict]:
         pass
 
 
