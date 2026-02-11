@@ -89,10 +89,11 @@ class TestCreateTransactionSerializer(unittest.TestCase):
 class TestUpdateTransactionSerializer(unittest.TestCase):
     def setUp(self):
         self.data = {"total_price": 10000, "is_finished": False}
-        self.validated_data = {"total_price": Decimal('10000'), "is_finished": False}
+        self.transaction_id = 1
+        self.validated_data = {"total_price": Decimal('10000'), "is_finished": False, "transaction_id": self.transaction_id}
 
     def test_update_success(self):
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
@@ -104,7 +105,7 @@ class TestUpdateTransactionSerializer(unittest.TestCase):
     def test_update_success_string_big(self):
         self.data["total_price"] = "999999.99"
         self.validated_data["total_price"] = Decimal('999999.99')
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
@@ -116,7 +117,7 @@ class TestUpdateTransactionSerializer(unittest.TestCase):
     def test_update_success_string_small(self):
         self.data["total_price"] = "0.01"
         self.validated_data["total_price"] = Decimal('0.01')
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
@@ -128,7 +129,7 @@ class TestUpdateTransactionSerializer(unittest.TestCase):
     def test_update_success_string_other_separator(self):
         self.data["total_price"] = "0,01"
         self.validated_data["total_price"] = Decimal('0.01')
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
@@ -139,7 +140,7 @@ class TestUpdateTransactionSerializer(unittest.TestCase):
 
     def test_update_none_total_price(self):
         self.data["total_price"] = None
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
@@ -149,7 +150,7 @@ class TestUpdateTransactionSerializer(unittest.TestCase):
 
     def test_update_total_price_too_small(self):
         self.data["total_price"] = 0
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
@@ -159,7 +160,7 @@ class TestUpdateTransactionSerializer(unittest.TestCase):
 
     def test_update_product_rating_too_big(self):
         self.data["total_price"] = 1000000
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
@@ -169,7 +170,7 @@ class TestUpdateTransactionSerializer(unittest.TestCase):
 
     def test_update_none_is_finished(self):
         self.data["is_finished"] = None
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
@@ -179,7 +180,7 @@ class TestUpdateTransactionSerializer(unittest.TestCase):
 
     def test_update_invalid_type_is_finished(self):
         self.data["is_finished"] = "yes"
-        serializer = UpdateTransactionSerializer(data=self.data)
+        serializer = UpdateTransactionSerializer(self.transaction_id, data=self.data)
 
         result = serializer.is_valid()
 
