@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation
 
+from store.serializers.check_id_serializer import CheckIdSerializer
 from store.serializers.check_username_serializer import CheckUsernameSerializer
 
 
@@ -56,10 +57,15 @@ class CreateTransactionSerializer:
 
 
 class UpdateTransactionSerializer:
-    def __init__(self, data: dict):
+    def __init__(self, transaction_id: int, data: dict):
+        self._transaction_id = transaction_id
         self._data = data
         self._validated_data = {}
         self._errors = {}
+
+    @property
+    def transaction_id(self):
+        return self._transaction_id
 
     @property
     def data(self):
@@ -74,7 +80,15 @@ class UpdateTransactionSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return self._validate_total_price() and self._validate_is_finished()
+        return self._validate_id() and self._validate_total_price() and self._validate_is_finished()
+
+    def _validate_id(self) -> bool:
+        id_serializer = CheckIdSerializer(self.transaction_id, "Transaction")
+        if id_serializer.is_valid():
+            self.validated_data["transaction_id"] = self.transaction_id
+            return True
+        self.errors["transaction_id"] = id_serializer.error
+        return False
 
 
     def _validate_total_price(self) -> bool:
