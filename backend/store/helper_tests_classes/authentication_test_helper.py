@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Type
 from unittest.mock import patch
 from rest_framework.test import APIClient
@@ -124,7 +125,7 @@ class AuthenticationHelper:
     @staticmethod
     def return_exemplary_user_data() -> dict:
         return {"email": "test@example.com", "username": "tester", "password": "Abc123#ab",
-         "is_verified": False, "bio": "I'm new here!", "money": 0.00, "is_superuser": False,
+         "is_verified": False, "bio": "I'm new here!", "money": Decimal("1000.00"), "is_superuser": False,
          "last_login": None, "address": "fweffwe", "postal_code": "00001", "city": "Warsaw", "country": "Poland"}
 
 
