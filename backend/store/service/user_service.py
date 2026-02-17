@@ -15,7 +15,7 @@ class FindByUsernameUserService:
 
 
 class UpdateUserService:
-    def update(self, token : str, user: User) -> str:
+    def update(self, token : str, user: User, update_data: dict) -> str:
         pass
 
 
