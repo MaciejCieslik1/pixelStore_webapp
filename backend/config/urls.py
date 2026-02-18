@@ -30,5 +30,6 @@ urlpatterns = [
     path('product_photo/', include('store.urls.product_photo_urls')),
     path('product_review/', include('store.urls.product_review_urls')),
     path('transaction/', include('store.urls.transaction_urls')),
-    path('user/', include('store.urls.user_urls'))
+    path('user/', include('store.urls.user_urls')),
+    path('user_preferences/', include('store.urls.user_preferences_urls'))
 ]
