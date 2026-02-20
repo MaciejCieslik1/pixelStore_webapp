@@ -32,10 +32,10 @@ class TestFindByUsernameService:
 
 
     def test_find_by_username_user_not_exist(self):
-        user_before = Transaction.objects.all().count()
+        user_before = User.objects.all().count()
         with pytest.raises(InvalidInputData) as e:
             self.service.find_by_username(self.token, self.owner, "bad username")
-        user_after = Transaction.objects.all().count()
+        user_after = User.objects.all().count()
 
         assert f"User with this username does not exist." in str(e.value)
         assert user_before == user_after
