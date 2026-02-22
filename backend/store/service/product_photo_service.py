@@ -1,3 +1,5 @@
+from django.db import transaction
+
 from store.exceptions import InvalidInputData
 from store.helper_classes.authentication_helper import TokenUtils
 from store.models import User, ProductPhoto, Product
@@ -53,17 +55,18 @@ class CreateProductPhotoService:
         if product.owner.username != user.username:
             raise InvalidInputData("Product with this id does not belong to the user.")
 
-        if new_product_photo_data["is_main_photo"]:
-            old_main_product_photo = ProductPhoto.objects.filter(
-                product_id=new_product_photo_data["product_id"], is_main_photo=True).first()
+        with transaction.atomic():
+            if new_product_photo_data["is_main_photo"]:
+                old_main_product_photo = ProductPhoto.objects.filter(
+                    product_id=new_product_photo_data["product_id"], is_main_photo=True).first()
 
-            if old_main_product_photo is not None:
-                old_main_product_photo.is_main_photo = False
-                old_main_product_photo.save()
+                if old_main_product_photo is not None:
+                    old_main_product_photo.is_main_photo = False
+                    old_main_product_photo.save()
 
-        product_photo = ProductPhoto(product=product, image_url=new_product_photo_data["image_url"],
-            is_main_photo=new_product_photo_data["is_main_photo"])
-        product_photo.save()
+            product_photo = ProductPhoto(product=product, image_url=new_product_photo_data["image_url"],
+                is_main_photo=new_product_photo_data["is_main_photo"])
+            product_photo.save()
         return "Product photo created successfully."
 
 

@@ -9,7 +9,7 @@ class OrderProductTestHelper:
         transaction = Transaction(buyer=user, total_price=1000, date_time = timezone.now(), is_finished = False)
         transaction.save()
         seller_data = {"email": "test2@example.com", "username": "tester2", "password": "Abc123#ab",
-         "is_verified": False, "bio": "I'm new here!", "money": 0.00, "is_superuser": False,
+         "is_verified": False, "bio": "I'm new here!", "money": 100000.00, "is_superuser": False,
          "last_login": None, "address": "fweffwe", "postal_code": "00001", "city": "Warsaw", "country": "Poland"}
         seller = User.create_user(seller_data)
         seller.save()

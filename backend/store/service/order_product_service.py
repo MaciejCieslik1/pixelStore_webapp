@@ -1,4 +1,4 @@
-
+from django.db import transaction
 from store.exceptions import InvalidInputData
 from store.helper_classes.authentication_helper import TokenUtils
 from store.models import User, OrderProduct, Product, Transaction
@@ -38,20 +38,21 @@ class CreateOrderProductService:
         if product.status == "archived":
             raise InvalidInputData("Product is archived.")
 
-        transaction = Transaction.objects.filter(transaction_id=new_order_product_data["transaction_id"]).first()
-        if transaction is None:
+        transaction_obj = Transaction.objects.filter(transaction_id=new_order_product_data["transaction_id"]).first()
+        if transaction_obj is None:
             raise InvalidInputData("Invalid transaction id provided.")
-        if transaction.buyer != user:
+        if transaction_obj.buyer != user:
             raise InvalidInputData("Transaction in which order exists does not belong to the user.")
-        if transaction.is_finished:
+        if transaction_obj.is_finished:
             raise InvalidInputData("Cannot assign order to finished transaction.")
 
-        item_price = new_order_product_data["shopping_price"]
-        order_product = OrderProduct(product=product, transaction=transaction, seller=seller, shopping_price=item_price)
-        order_product.save()
+        with transaction.atomic():
+            item_price = new_order_product_data["shopping_price"]
+            order_product = OrderProduct(product=product, transaction=transaction_obj, seller=seller, shopping_price=item_price)
+            order_product.save()
 
-        product.status = "unavailable"
-        product.save()
+            product.status = "unavailable"
+            product.save()
 
         return "Order created successfully."
 
@@ -66,7 +67,8 @@ class DeleteOrderProductService:
             raise InvalidInputData("Transaction in which order exists does not belong to the user.")
         product = order_product.product
 
-        order_product.delete()
-        product.status = "available"
-        product.save()
+        with transaction.atomic():
+            order_product.delete()
+            product.status = "available"
+            product.save()
         return "Order deleted successfully"

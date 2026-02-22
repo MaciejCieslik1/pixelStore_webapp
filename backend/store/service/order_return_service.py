@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.utils import timezone
 
 from store.exceptions import InvalidInputData
@@ -31,13 +32,14 @@ class CreateOrderReturnService:
         if order_product.transaction.buyer != user:
             raise InvalidInputData("Transaction in which order exists does not belong to the user.")
 
-        order_return = OrderReturn(order_product=order_product, description=description, return_date_time=timezone.now(),
-            is_accepted=False)
-        order_return.save()
+        with transaction.atomic():
+            order_return = OrderReturn(order_product=order_product, description=description, return_date_time=timezone.now(),
+                is_accepted=False)
+            order_return.save()
 
-        text = f"User: {user.username} wants to return his/her order. Order return id is: {order_return.id}."
-        notification = Notification(sender=user, receiver=order_product.seller, sent_date_time=timezone.now(), text=text)
-        notification.save()
+            text = f"User: {user.username} wants to return his/her order. Order return id is: {order_return.id}."
+            notification = Notification(sender=user, receiver=order_product.seller, sent_date_time=timezone.now(), text=text)
+            notification.save()
 
         return "Order return created successfully."
 
@@ -51,16 +53,17 @@ class UpdateOrderReturnService:
         if order_return.order_product.seller != user:
             raise InvalidInputData("User is not seller of the product.")
 
-        order_return.is_accepted = True
-        order_return.save()
+        with transaction.atomic():
+            order_return.is_accepted = True
+            order_return.save()
 
-        order_product = order_return.order_product
-        buyer = order_product.transaction.buyer
+            order_product = order_return.order_product
+            buyer = order_product.transaction.buyer
 
-        text = f"Seller: {user.username} accepted your return request. Order return id is: {order_return.order_return_id}."
-        notification = Notification(sender=user, receiver=buyer, sent_date_time=timezone.now(), text=text)
-        notification.save()
+            text = f"Seller: {user.username} accepted your return request. Order return id is: {order_return.order_return_id}."
+            notification = Notification(sender=user, receiver=buyer, sent_date_time=timezone.now(), text=text)
+            notification.save()
 
-        PaymentHelper.make_payment(order_product, is_return=True)
+            PaymentHelper.make_payment(order_product, is_return=True)
 
         return "Order return updated successfully."
