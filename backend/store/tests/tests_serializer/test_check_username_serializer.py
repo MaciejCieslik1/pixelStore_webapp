@@ -29,6 +29,7 @@ class TestCheckUsernameSerializer(unittest.TestCase):
 
     def test_check_username_correct_delete_spaces_max_length(self):
         self.username = "   " + "a" * 32 + "   "
+        self.validated_username = "a" * 32
         serializer = CheckUsernameSerializer(username=self.username)
 
         result = serializer.is_valid()
@@ -45,7 +46,7 @@ class TestCheckUsernameSerializer(unittest.TestCase):
 
         self.assertFalse(result)
         self.assertNotEqual(serializer.validated_username, self.validated_username)
-        self.assertEqual(serializer.error, "Username cannot be empty")
+        self.assertEqual(serializer.error, "Username cannot be empty.")
 
     def test_check_username_none(self):
         self.username = None
@@ -55,7 +56,7 @@ class TestCheckUsernameSerializer(unittest.TestCase):
 
         self.assertFalse(result)
         self.assertNotEqual(serializer.validated_username, self.validated_username)
-        self.assertEqual(serializer.error, "Username cannot be empty")
+        self.assertEqual(serializer.error, "Username cannot be empty.")
 
     def test_check_username_not_string(self):
         self.username = 2
@@ -65,14 +66,14 @@ class TestCheckUsernameSerializer(unittest.TestCase):
 
         self.assertFalse(result)
         self.assertNotEqual(serializer.validated_username, self.validated_username)
-        self.assertEqual(serializer.error, "Username must be string")
+        self.assertEqual(serializer.error, "Username must be a string.")
 
     def test_check_username_too_long(self):
-        self.username = "   " + "a" * 32 + "   "
+        self.username = "   " + "a" * 33 + "   "
         serializer = CheckUsernameSerializer(username=self.username)
 
         result = serializer.is_valid()
 
-        self.assertTrue(result)
-        self.assertEqual(serializer.validated_username, self.validated_username)
-        self.assertEqual(serializer.error, None)
+        self.assertFalse(result)
+        self.assertNotEqual(serializer.validated_username, self.validated_username)
+        self.assertEqual(serializer.error, "Username cannot be longer than 32 characters.")
