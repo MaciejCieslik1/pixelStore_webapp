@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 import pytest
 from django.utils import timezone
@@ -237,11 +238,13 @@ class TestUpdateOrderReturnService:
         self.updated_communicate = "Order return updated successfully."
         self.service = UpdateOrderReturnService()
         self.seller2_data = {"email": "test3@example.com", "username": "tester3", "password": "Abc123#ab",
-                            "is_verified": True, "bio": "I'm new here!", "money": 0.00, "is_superuser": False,
+                            "is_verified": True, "bio": "I'm new here!", "money": 10000.00, "is_superuser": False,
                             "last_login": None, "address": "fweffwe", "postal_code": "00001", "city": "Warsaw",
                             "country": "Poland"}
         self.token_seller2 = AuthenticationHelper.register_and_login_user(self.seller2_data)
         self.seller2 = User.objects.get(username=self.seller2_data["username"])
+        self.seller2.money = Decimal(10000.00)
+        self.seller2.save()
         order_product = self.order_return.order_product
         order_product.seller = self.seller2
         order_product.save()
