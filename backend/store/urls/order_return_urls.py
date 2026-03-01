@@ -10,9 +10,9 @@ update_service = UpdateOrderReturnService()
 
 urlpatterns = [
     path("find_by_id/<int:order_return_id>/", FindByIdOrderReturnView.as_view(
-        find_by_id_order_return_service=find_by_id_order_return_service), name="find_by_id_order_return/<int:order_return_id>"),
+        find_by_id_order_return_service=find_by_id_order_return_service), name="find_by_id_order_return"),
     path("create/", CreateOrderReturnView.as_view(create_order_return_service=create_service),
          name="create_order_return"),
     path("update/<int:order_return_id>/", UpdateOrderReturnView.as_view(update_order_return_service=update_service),
-         name="update_order_return/<int:order_return_id>"),
+         name="update_order_return"),
 ]

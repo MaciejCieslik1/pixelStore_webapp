@@ -7,5 +7,5 @@ find_by_username_user_statistics_service = FindByUsernameUserStatisticsService()
 
 urlpatterns = [
     path("find_by_username/<str:username>/", FindByUsernameUserStatisticsView.as_view(
-        find_by_username_user_statistics_service=find_by_username_user_statistics_service), name="find_by_username/<str:username>"),
+        find_by_username_user_statistics_service=find_by_username_user_statistics_service), name="find_by_username"),
 ]
