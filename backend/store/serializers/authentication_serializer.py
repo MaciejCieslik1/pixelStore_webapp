@@ -175,6 +175,8 @@ class RegisterSerializer:
 
 class LoginSerializer:
     def __init__(self, data: dict):
+        if isinstance(data, str):
+            data = json.loads(data)
         self._data = data
         self._validated_data = {}
         self._errors = {}
@@ -206,6 +208,8 @@ class LoginSerializer:
 
 class AccountVerificationSerializer:
     def __init__(self, data: dict):
+        if isinstance(data, str):
+            data = json.loads(data)
         self._data = data
         self._validated_data = {}
         self._errors = {}
@@ -250,6 +254,8 @@ class AccountVerificationSerializer:
 
 class TokenVerificationSerializer:
     def __init__(self, data: dict):
+        if isinstance(data, str):
+            data = json.loads(data)
         self._data = data
         self._validated_data = {}
         self._errors = {}
@@ -278,6 +284,8 @@ class TokenVerificationSerializer:
 
 class ResetPasswordSerializer:
     def __init__(self, data: dict, user: User):
+        if isinstance(data, str):
+            data = json.loads(data)
         self._data = data
         self._user = user
         self._validated_data = {}
