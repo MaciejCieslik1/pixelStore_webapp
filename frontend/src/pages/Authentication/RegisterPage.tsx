@@ -146,7 +146,7 @@ export const RegisterPage: React.FC = () => {
                         <button
                             type="button"
                             className="link-button"
-                            onClick={() => navigate("/verify-account")}
+                            onClick={() => navigate("/verify_account")}
                         >
                             Verify account
                         </button>
