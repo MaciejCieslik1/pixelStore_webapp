@@ -81,7 +81,7 @@ class VerifyAccountService:
         except ObjectDoesNotExist:
             raise UserNotFoundError("User with provided email does not exist.")
 
-        VerificationCodeHandling.check_verification_code_credentials(user, data["code"])
+        VerificationCodeHandling.check_verification_code_credentials(user, data["verification_code"])
 
         user.is_verified = True
         user.save()
