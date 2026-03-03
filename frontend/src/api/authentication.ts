@@ -2,27 +2,10 @@ import { apiFetch } from "./client";
 import type {RegisterData, LoginData, Tokens, ResetPasswordData, VerifyAccountData} from "../types/authentication.ts";
 
 export const register = async (data: RegisterData) => {
-    try {
-        const response = await apiFetch<{ msg?: string; error?: string }>(
-            "/register/",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data)
-            }
-        );
-
-        if (response.error) {
-            throw response;
-        }
-
-        return response;
-    }
-    catch (err) {
-        throw err;
-    }
+    return await apiFetch<{ msg?: string; error?: string }>("/register/", {
+        method: "POST",
+        body: data
+    });
 };
 
 export const login = (data: LoginData) => {
@@ -39,24 +22,10 @@ export const logout = (access_token: string) => {
 
 
 export const verifyAccount = async (data: VerifyAccountData) => {
-    try {
-        const response = await apiFetch<{ msg?: string; error?: string }>(
-            "/verify_account/",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(data)
-            }
-        );
-
-        if (response.error) throw response;
-        return response;
-    }
-    catch (err) {
-        throw err;
-    }
+    return await apiFetch<{ msg?: string; error?: string }>("/verify_account/", {
+        method: "POST",
+        body: data
+    });
 };
 
 
