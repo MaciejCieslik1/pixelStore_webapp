@@ -1,3 +1,4 @@
+import json
 import re
 
 from store.helper_classes.authentication_helper import DataValidator
@@ -6,6 +7,8 @@ from store.models import User
 
 class RegisterSerializer:
     def __init__(self, data: dict):
+        if isinstance(data, str):
+            data = json.loads(data)
         self._data = data
         self._validated_data = data
         self._errors = {}
