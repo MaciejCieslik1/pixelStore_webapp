@@ -31,7 +31,7 @@ class FindAllProductsService:
         page = validated_data.get("page") or 1
         page_size = validated_data.get("page_size") or 10
 
-        if not User.objects.filter(username=owner_username).exists():
+        if owner_username and not User.objects.filter(username=owner_username).exists():
             raise InvalidInputData("Product from seller with provided username does not exist.")
 
         products = Product.objects.all()
