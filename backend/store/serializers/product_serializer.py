@@ -57,12 +57,19 @@ class FindAllProductsSerializer:
         if price is None:
             self.validated_data["price"] = None
             return True
-        elif (not isinstance(price, int) and not isinstance(price, float)) or price < 0.01:
-            self.errors[label] = f"{label.capitalize()} price must be positive integer or decimal."
-        elif (isinstance(price, int) and price > 999999) or (isinstance(price, float) and price > 999999.99):
+
+        try:
+            numeric_price = float(price)
+        except (ValueError, TypeError):
+            self.errors[label] = f"{label.capitalize()} price must be a valid number."
+            return False
+
+        if numeric_price < 0.01:
+            self.errors[label] = f"{label.capitalize()} price must be positive."
+        elif numeric_price > 999999.99:
             self.errors[label] = f"{label.capitalize()} price must be less than 1000000.00."
         else:
-            self.validated_data[label] = price
+            self.validated_data[label] = numeric_price
             return True
         return False
 
