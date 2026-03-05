@@ -1,0 +1,126 @@
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { findById } from "../../api/product.ts";
+import type { ProductDetailsData } from "../../types/product.ts";
+import "./ProductDetailsPage.css";
+
+export const ProductDetailsPage: React.FC = () => {
+    const { product_id } = useParams<{ product_id: string }>();
+    const navigate = useNavigate();
+    const [product, setProduct] = useState<ProductDetailsData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const currentUser = localStorage.getItem("username");
+
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const token = localStorage.getItem("accessToken") || "";
+                if (product_id) {
+                    const data = await findById(product_id, token);
+                    setProduct(data);
+                }
+            } catch (err) {
+                console.error("Error fetching product details:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProduct();
+    }, [product_id]);
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate("/login");
+    };
+
+    if (loading) return <div className="loader">Loading product...</div>;
+    if (!product) return <div className="error-msg">Product not found.</div>;
+
+    const mainPhoto = product.product_photos?.find(p => p.is_main_photo)?.image_url
+                      || product.product_photos?.[0]?.image_url;
+
+    return (
+        <div className="details-wrapper">
+            <header className="top-navbar">
+                <div className="logo" onClick={() => navigate("/")}>PixelStore</div>
+                <div className="nav-actions">
+                    <button className="logout-button" onClick={handleLogout}>Logout</button>
+                </div>
+            </header>
+
+            <main className="details-content">
+                <div className="product-layout">
+
+                    <div className="product-media">
+                        <div className="main-image-container" onClick={() => setIsGalleryOpen(true)}>
+                            {mainPhoto ? (
+                                <img src={mainPhoto} alt={product.name} className="main-img-large" />
+                            ) : (
+                                <div className="img-placeholder">No image available</div>
+                            )}
+                            <div className="zoom-overlay">Click to view gallery</div>
+                        </div>
+                    </div>
+
+                    <div className="product-info-panel">
+                        <div className="info-header">
+                            <span className="seller-tag">Seller: {product.owner_username}</span>
+                            <h1>{product.name}</h1>
+                            <p className="status-badge" data-status={product.status}>{product.status}</p>
+                        </div>
+
+                        <div className="price-tag">{product.price} PLN</div>
+
+                        <div className="description-section">
+                            <h3>Description</h3>
+                            <p>{product.description}</p>
+                        </div>
+
+                        <div className="specs-grid">
+                            <div className="spec-item"><strong>Color:</strong> {product.color}</div>
+                            <div className="spec-item"><strong>Weight:</strong> {product.weight} kg</div>
+                            <div className="spec-item"><strong>Dimensions:</strong> {product.length}x{product.width}x{product.height} cm</div>
+                            <div className="spec-item"><strong>Guarantee:</strong> {product.guarantee_period} months</div>
+                            <div className="spec-item"><strong>In Stock:</strong> {product.amount} units</div>
+                        </div>
+
+                        <div className="action-buttons">
+                            <button className="add-to-cart-btn">Add to Cart</button>
+
+                            {currentUser === product.owner_username && (
+                                <button className="edit-product-btn" onClick={() => navigate(`/product/edit/${product.product_id}`)}>
+                                    Edit Product
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            {isGalleryOpen && product.product_photos && (
+                <div className="gallery-modal" onClick={() => setIsGalleryOpen(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <button className="close-modal" onClick={() => setIsGalleryOpen(false)}>&times;</button>
+                        <img
+                            src={product.product_photos[currentImageIndex].image_url}
+                            alt="Gallery preview"
+                        />
+                        <div className="gallery-thumbs">
+                            {product.product_photos.map((photo, index) => (
+                                <img
+                                    key={index}
+                                    src={photo.image_url}
+                                    className={index === currentImageIndex ? "active-thumb" : ""}
+                                    onClick={() => setCurrentImageIndex(index)}
+                                 alt={product.name}/>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
