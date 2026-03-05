@@ -1,7 +1,7 @@
 export interface ProductFromListData {
     product_id: number;
     name: string;
-    sellerUsername: string;
+    owner_username: string;
     price: number;
     status: string;
     product_photos?: ProductImage[];
@@ -15,7 +15,7 @@ export interface ProductImage {
 
 export interface ProductDetailsData {
     product_id: number;
-    sellerUsername: string;
+    owner_username: string;
     name: string;
     description: string;
     price: number;
@@ -23,6 +23,7 @@ export interface ProductDetailsData {
     color: string;
     weight: number;
     length: number;
+    width: number;
     height: number;
     guarantee_period: number;
     status: string;
