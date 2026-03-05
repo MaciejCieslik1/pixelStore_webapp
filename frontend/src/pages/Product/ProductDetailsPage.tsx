@@ -82,7 +82,7 @@ export const ProductDetailsPage: React.FC = () => {
                         <div className="specs-grid">
                             <div className="spec-item"><strong>Color:</strong> {product.color}</div>
                             <div className="spec-item"><strong>Weight:</strong> {product.weight} kg</div>
-                            <div className="spec-item"><strong>Dimensions:</strong> {product.length}x{product.width}x{product.height} cm</div>
+                            <div className="spec-item"><strong>Dimensions:</strong> {product.length} x {product.width} x {product.height} cm</div>
                             <div className="spec-item"><strong>Guarantee:</strong> {product.guarantee_period} months</div>
                             <div className="spec-item"><strong>In Stock:</strong> {product.amount} units</div>
                         </div>
@@ -91,7 +91,7 @@ export const ProductDetailsPage: React.FC = () => {
                             <button className="add-to-cart-btn">Add to Cart</button>
 
                             {currentUser === product.owner_username && (
-                                <button className="edit-product-btn" onClick={() => navigate(`/product/edit/${product.product_id}`)}>
+                                <button className="edit-product-btn" onClick={() => navigate(`/product/update/${product.product_id}`)}>
                                     Edit Product
                                 </button>
                             )}
