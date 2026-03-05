@@ -3,6 +3,7 @@ import {VerifyAccountPage} from "./pages/Authentication/VerifyAccountPage.tsx";
 import {RegisterPage} from "./pages/Authentication/RegisterPage.tsx";
 import {LoginPage} from "./pages/Authentication/LoginPage.tsx";
 import {ProductListPage} from "./pages/Product/ProductListPage.tsx";
+import {ProductDetailsPage} from "./pages/Product/ProductDetailsPage.tsx"
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/verify_account" element={<VerifyAccountPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/product/find_all" element={<ProductListPage />} />
+        <Route path="/product/find_by_id/:product_id" element={<ProductDetailsPage />} />
       </Routes>
     </Router>
   );
