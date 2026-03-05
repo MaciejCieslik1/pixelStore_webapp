@@ -153,7 +153,7 @@ export const ProductListPage: React.FC = () => {
                                     <div
                                         className="product-card"
                                         key={product.product_id}
-                                        onClick={() => navigate(`/product/${product.product_id}`)}
+                                        onClick={() => navigate(`/product/find_by_id/${product.product_id}`)}
                                     >
                                         <div className="product-image">
                                             {photoUrl ? (
