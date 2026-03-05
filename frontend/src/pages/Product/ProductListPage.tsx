@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./ProductListPage.css";
 import type {ProductFromListData, ProductImage} from "../../types/product.ts";
+import { findAll, type ProductFilters } from "../../api/product.ts";
 
 export const ProductListPage: React.FC = () => {
     const navigate = useNavigate();
@@ -14,44 +15,26 @@ export const ProductListPage: React.FC = () => {
     const [order, setOrder] = useState("asc");
     const [loading, setLoading] = useState(true);
 
-
     useEffect(() => {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
-                const token = localStorage.getItem("accessToken");
+                const token = localStorage.getItem("accessToken") || "";
 
-                const queryParams: Record<string, string> = {
-                    ordering_field: sortBy,
+                const filters: ProductFilters = {
+                    searchTerm: searchTerm,
+                    sortBy: sortBy,
                     order: order,
-                    page: "1",
-                    page_size: "20"
+                    minPrice: minPrice,
+                    maxPrice: maxPrice,
+                    status: status
                 };
 
-                if (searchTerm.trim() !== "") {
-                    queryParams.name = searchTerm;
-                }
+                const data = await findAll(filters, token);
 
-                if (minPrice) queryParams.min_price = minPrice;
-                if (maxPrice) queryParams.max_price = maxPrice;
-                if (status) queryParams.status = status;
-
-                const queryString = new URLSearchParams(queryParams).toString();
-
-                const response = await fetch(`http://localhost:8000/product/find_all/?${queryString}`, {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    setProducts(Array.isArray(data) ? data : []);
-                } else {
-                    console.error("Service error:", data);
-                    setProducts([]);
-                }
+                setProducts(Array.isArray(data) ? data : []);
             } catch (err) {
-                console.error("Connection error:", err);
+                console.error("Error fetching products:", err);
                 setProducts([]);
             } finally {
                 setLoading(false);
