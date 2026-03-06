@@ -48,17 +48,21 @@ class FindAllMineTransactionsService:
 
 
 class CreateTransactionService:
-    def create(self, token: str, user: User, new_transaction_data: dict) -> str:
+    def create(self, token: str, user: User, new_transaction_data: dict) -> dict:
         TokenUtils.verify_access_token(token, user)
 
-        buyer = User.objects.filter(username=new_transaction_data["buyer_username"]).first()
+        buyer = user
         if buyer is None:
             raise InvalidInputData("User with this username does not exist.")
 
         transaction = Transaction(buyer=buyer, total_price=new_transaction_data["total_price"],
                                   date_time=datetime.datetime.now(), is_finished=False)
         transaction.save()
-        return "Transaction created successfully."
+        return {
+            "transaction_id": transaction.transaction_id,
+            "buyer_username": buyer.username,
+            "total_price": float(transaction.total_price),
+        }
 
 
 class UpdateTransactionService:

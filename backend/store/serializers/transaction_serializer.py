@@ -23,16 +23,7 @@ class CreateTransactionSerializer:
         return self._errors
 
     def is_valid(self) -> bool:
-        return self._validate_buyer_username() and self._validate_total_price()
-
-    def _validate_buyer_username(self) -> bool:
-        username = self.data.get("buyer_username")
-        username_serializer = CheckUsernameSerializer(username)
-        if username_serializer.is_valid():
-            self.validated_data["buyer_username"] = username
-            return True
-        self.errors["buyer_username"] = username_serializer.error
-        return False
+        return self._validate_total_price()
 
     def _validate_total_price(self) -> bool:
         raw_value = self.data.get("total_price")

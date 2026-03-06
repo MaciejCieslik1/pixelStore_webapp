@@ -107,8 +107,8 @@ class CreateTransactionView(APIView):
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
-                communicate = self.create_transaction_service.create(token, request.user, serializer.validated_data)
-                return Response({"msg": communicate}, status=status.HTTP_200_OK)
+                result_data = self.create_transaction_service.create(token, request.user, serializer.validated_data)
+                return Response(result_data, status=status.HTTP_201_CREATED)
             except (IncorrectTokenError, TokenExpiredError, CannotGetTokenFromRequestError,
                     TokenExpiredByReplacementError) as e:
                 return Response(
