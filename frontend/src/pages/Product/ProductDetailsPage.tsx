@@ -31,6 +31,64 @@ export const ProductDetailsPage: React.FC = () => {
         fetchProduct();
     }, [product_id]);
 
+   const handleAddToCart = async () => {
+       if (!product) {
+           alert("Product data is still loading...");
+           return;
+       }
+       const token = localStorage.getItem("accessToken");
+
+        if (!token) {
+            alert("You must be logged in to add items to the cart.");
+            navigate("/login");
+            return;
+        }
+
+        try {
+            const transactionResponse = await fetch("http://localhost:8000/transaction/create/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    total_price: product.price,
+                })
+            });
+
+            if (!transactionResponse.ok) {
+                const errorData = await transactionResponse.json();
+                console.log("Validation error:", errorData);
+                throw new Error(errorData.details || "Failed to create transaction");
+            }
+
+            const transactionData = await transactionResponse.json();
+
+            const orderProductResponse = await fetch("http://localhost:8000/order_product/create/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    product_id: product.product_id,
+                    transaction_id: transactionData.transaction_id,
+                    seller_username: product.owner_username,
+                    shopping_price: Number(product.price),
+                }),
+            });
+
+            if (!orderProductResponse.ok) {
+                throw new Error("Order product creation error");
+            }
+
+            alert("Product was successfully added to the cart!");
+
+        } catch (err: any) {
+            console.error("Cart Error:", err);
+            alert(err.message || "Error while adding product to the cart.");
+        }
+};
     const handleLogout = () => {
         localStorage.clear();
         navigate("/login");
@@ -88,10 +146,16 @@ export const ProductDetailsPage: React.FC = () => {
                         </div>
 
                         <div className="action-buttons">
-                            <button className="add-to-cart-btn">Add to Cart</button>
+                            <button
+                                className="add-to-cart-btn"
+                                onClick={handleAddToCart}
+                            >
+                                Add to Cart
+                            </button>
 
                             {currentUser === product.owner_username && (
-                                <button className="edit-product-btn" onClick={() => navigate(`/product/update/${product.product_id}`)}>
+                                <button className="edit-product-btn" onClick={() =>
+                                    navigate(`/product/update/${product.product_id}`)}>
                                     Edit Product
                                 </button>
                             )}
