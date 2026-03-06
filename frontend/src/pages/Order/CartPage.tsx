@@ -1,30 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ProductDetailsData } from "../../types/product.ts";
 import "./CartPage.css";
-
-interface CartItem extends ProductDetailsData {
-    quantity: number;
-}
 
 export const CartPage: React.FC = () => {
     const navigate = useNavigate();
-    const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const savedCart = localStorage.getItem("cart");
-        if (savedCart) {
-            setCartItems(JSON.parse(savedCart));
-        }
+        const fetchTransactions = async () => {
+            const token = localStorage.getItem("accessToken");
+            if (!token) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const res = await fetch("http://localhost:8000/transaction/find_all_mine/", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    throw new Error(`Server error: ${res.status}`);
+                }
+
+                const data = await res.json();
+
+                const pending = data.filter((t: any) => !t.is_finished);
+                setTransactions(pending);
+            } catch (err) {
+                console.error("Error fetching transactions:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTransactions();
     }, []);
-
-    const removeItem = (id: number) => {
-        const updated = cartItems.filter(item => item.product_id !== id);
-        setCartItems(updated);
-        localStorage.setItem("cart", JSON.stringify(updated));
-    };
-
-    const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
     const handleCheckout = async () => {
         const token = localStorage.getItem("accessToken");
@@ -35,18 +47,14 @@ export const CartPage: React.FC = () => {
             return;
         }
 
-        if (cartItems.length === 0) return;
+        if (transactions.length === 0) return;
 
         try {
-
-            const res = await fetch("http://localhost:8000/transaction/find_all_mine", {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+            const res = await fetch("http://localhost:8000/transaction/find_all_mine/", {
+                headers: { "Authorization": `Bearer ${token}` }
             });
 
             if (!res.ok) throw new Error("Cannot fetch transactions");
-
             const allTransactions = await res.json();
 
             const pendingTransactions = allTransactions.filter((t: any) => !t.is_finished);
@@ -57,72 +65,82 @@ export const CartPage: React.FC = () => {
             }
 
             const promises = pendingTransactions.map(async (transaction: any) => {
-
                 const updateRes = await fetch(
-                    `http://localhost:8000/transaction/update/${transaction.transaction_id}`,
+                    `http://localhost:8000/transaction/update/${transaction.transaction_id}/`,
                     {
                         method: "PUT",
                         headers: {
                             "Content-Type": "application/json",
                             "Authorization": `Bearer ${token}`,
-                        }
+                        },
+                        body: JSON.stringify({
+                            is_finished: true,
+                            total_price: transaction.total_price
+                        })
                     }
                 );
 
-                if (!updateRes.ok) throw new Error("Update error");
+                if (!updateRes.ok) {
+                    const errorText = await updateRes.text();
+                    console.error(`Transaction error ${transaction.transaction_id}:`, errorText);
+                    throw new Error(`Update error for transaction ${transaction.transaction_id}`);
+                }
             });
 
             await Promise.all(promises);
 
             alert("Purchase completed successfully! All transactions have been finalized.");
 
-            setCartItems([]);
+            setTransactions([]);
             localStorage.removeItem("cart");
             navigate("/product/find_all");
 
         } catch (err) {
             console.error("Checkout error:", err);
-            alert("An error occurred while finalizing the payment.");
-    }
-};
+            alert("An error occurred while finalizing the payment. Check console for details.");
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate("/login");
+    };
+
+    const totalPrice = transactions.reduce((sum, t) => sum + Number(t.total_price), 0);
+
+    if (loading) return <div className="loader">Loading transactions...</div>;
 
     return (
         <div className="cart-wrapper">
             <header className="top-navbar">
                 <div className="logo" onClick={() => navigate("/")}>PixelStore</div>
                 <div className="nav-actions">
-                    <button className="logout-button" onClick={() => navigate("/product/find_all")}>Back to Store</button>
+                    <button className="logout-button" onClick={() => navigate("/product/find_all")}>Store</button>
+                    <button className="logout-button" onClick={handleLogout}>Logout</button>
                 </div>
             </header>
 
             <main className="cart-content">
                 <h1>Your Shopping Cart</h1>
 
-                {cartItems.length === 0 ? (
+                {transactions.length === 0 ? (
                     <div className="empty-cart">
                         <p>Your cart is empty.</p>
-                        <button className="add-to-cart-btn" onClick={() => navigate("/product/find_all")}>Go Shopping</button>
+                        <button className="add-to-cart-btn" onClick={() => navigate("/product/find_all")}>
+                            Back to store
+                        </button>
                     </div>
                 ) : (
                     <div className="cart-layout">
                         <div className="cart-items-list">
-                            {cartItems.map((item) => (
-                                <div key={item.product_id} className="cart-item-card">
-                                    <img
-                                        src={item.product_photos?.[0]?.image_url || "/placeholder.png"}
-                                        alt={item.name}
-                                        className="cart-item-img"
-                                    />
+                            {transactions.map((t) => (
+                                <div key={t.transaction_id} className="cart-item-card">
                                     <div className="cart-item-info">
-                                        <h3>{item.name}</h3>
-                                        <p className="item-seller">Seller: {item.owner_username}</p>
-                                        <p className="item-price-unit">{item.price} PLN / unit</p>
-                                    </div>
-                                    <div className="cart-item-controls">
-                                        <button className="remove-item" onClick={() => removeItem(item.product_id)}>Remove</button>
+                                        <h3>Transaction #{t.transaction_id}</h3>
+                                        <p>Date: {new Date(t.date_time).toLocaleString()}</p>
                                     </div>
                                     <div className="cart-item-total">
-                                        {(item.price * item.quantity).toFixed(2)} PLN
+                                        {Number(t.total_price).toFixed(2)} PLN
                                     </div>
                                 </div>
                             ))}
@@ -130,17 +148,13 @@ export const CartPage: React.FC = () => {
 
                         <aside className="cart-summary">
                             <div className="summary-box">
-                                <h3>Order Summary</h3>
-                                <div className="summary-row">
-                                    <span>Items count:</span>
-                                    <span>{cartItems.reduce((a, b) => a + b.quantity, 0)}</span>
-                                </div>
+                                <h3>Summary</h3>
                                 <div className="summary-row total">
-                                    <span>Total Price:</span>
+                                    <span>Total price:</span>
                                     <span>{totalPrice.toFixed(2)} PLN</span>
                                 </div>
                                 <button className="checkout-button" onClick={handleCheckout}>
-                                    Buy Now
+                                    Pay Now
                                 </button>
                             </div>
                         </aside>
