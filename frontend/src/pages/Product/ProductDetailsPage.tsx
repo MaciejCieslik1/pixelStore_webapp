@@ -57,9 +57,7 @@ export const ProductDetailsPage: React.FC = () => {
             });
 
             if (!transactionResponse.ok) {
-                const errorData = await transactionResponse.json();
-                console.log("Validation error:", errorData);
-                throw new Error(errorData.details || "Failed to create transaction");
+                throw new Error("Failed to create transaction");
             }
 
             const transactionData = await transactionResponse.json();
@@ -88,7 +86,8 @@ export const ProductDetailsPage: React.FC = () => {
             console.error("Cart Error:", err);
             alert(err.message || "Error while adding product to the cart.");
         }
-};
+    };
+
     const handleLogout = () => {
         localStorage.clear();
         navigate("/login");
