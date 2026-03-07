@@ -6,4 +6,4 @@ from store.models import User
 class UserOutputSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username", "bio"]
+        fields = ["username", "bio", "money"]
