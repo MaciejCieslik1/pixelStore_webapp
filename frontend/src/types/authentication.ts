@@ -32,3 +32,8 @@ export interface ResetPasswordData {
     confirm_password: string;
     verification_code: string;
 }
+
+export interface TokenPayload {
+    username: string;
+    exp: number;
+}
