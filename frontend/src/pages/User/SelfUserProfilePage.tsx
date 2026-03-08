@@ -38,20 +38,28 @@ export const SelfUserProfilePage: React.FC = () => {
     const handleTopUp = async () => {
         const amount = prompt("Enter amount to add (PLN):");
         const parsedAmount = parseFloat(amount || "0");
+        const token = localStorage.getItem("accessToken") || "";
 
         if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
             alert("Please enter a valid amount.");
             return;
         }
 
+        const numberAmount = Number(parsedAmount);
+
         try {
-            if (user?.money) {
-                const response = await fetch('/user/update', {
+            if (parsedAmount) {
+                const money = Number(user?.money) || 0;
+                const newTotal = parseFloat((money + numberAmount).toFixed(2));
+                const response = await fetch('http://localhost:8000/user/update/', {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`,
+                    },
                     body: JSON.stringify({
-                        bio: user?.bio,
-                        money: user?.money + parsedAmount
+                        bio: user?.bio || "",
+                        money: newTotal
                     }),
                 });
 
@@ -74,14 +82,20 @@ export const SelfUserProfilePage: React.FC = () => {
     const handleNewBio = async () => {
         const bio = prompt("Enter new bio:");
         if (bio === null) return;
+        const token = localStorage.getItem("accessToken") || "";
 
         try {
-            const response = await fetch('/user/update', {
+            const money = Number(user?.money) || 0;
+            const moneyFixed = parseFloat((money).toFixed(2));
+            const response = await fetch('http://localhost:8000/user/update/', {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     bio: bio,
-                    money: user?.money
+                    money: moneyFixed
                 }),
             });
 
@@ -115,7 +129,7 @@ export const SelfUserProfilePage: React.FC = () => {
                 <div className="user-info">
                     <p><strong>Username:</strong> {user?.username}</p>
                     <p><strong>Bio:</strong> {user?.bio || "No bio available"}</p>
-                    <p><strong>Balance:</strong> <span className="money-amount">${user?.money}</span></p>
+                    <p><strong>Balance:</strong> <span className="money-amount">{user?.money} PLN</span></p>
                 </div>
 
                 <div className="button-grid">
