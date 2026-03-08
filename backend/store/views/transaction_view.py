@@ -9,7 +9,7 @@ from store.exceptions import IncorrectTokenError, TokenExpiredError, CannotGetTo
 from store.helper_classes.authentication_helper import TokenUtils
 from store.serializers.check_id_serializer import CheckIdSerializer
 from store.serializers.page_serializer import PageSerializer
-from store.serializers.transaction_serializer import CreateTransactionSerializer, UpdateTransactionSerializer
+from store.serializers.transaction_serializer import CreateTransactionSerializer
 from store.service.transaction_service import FindByIdTransactionService, FindAllMineTransactionsService, \
     CreateTransactionService, UpdateTransactionService
 
@@ -141,7 +141,7 @@ class UpdateTransactionView(APIView):
         return self._update_transaction_service
 
     def put(self, request: Request, transaction_id: int) -> Response:
-        serializer = UpdateTransactionSerializer(transaction_id=transaction_id, data=request.data)
+        serializer = CheckIdSerializer(id=transaction_id, name="Transaction")
         if serializer.is_valid():
             try:
                 token = TokenUtils.get_jwt_token_from_request(request)
