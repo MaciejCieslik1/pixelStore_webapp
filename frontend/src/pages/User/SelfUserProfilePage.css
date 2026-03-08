@@ -103,3 +103,19 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
+.btn-topup {
+  background-color: #28a745;
+  color: white;
+  grid-column: span 2;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.1s ease-in-out;
+}
+
+.btn-topup:active {
+  transform: scale(0.98);
+}
