@@ -137,7 +137,7 @@ html, body, #root {
 .add-to-cart-btn {
     flex: 2;
     padding: 16px;
-    background: #a669f1;
+    background-color: #007bff;
     color: white;
     border: none;
     border-radius: 10px;
@@ -214,4 +214,31 @@ html, body, #root {
     background: none;
     border: none;
     cursor: pointer;
+}
+
+.nav-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.nav-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.nav-btn:hover {
+    background-color: #007bff;
+}
+
+.nav-btn:active {
+    transform: scale(0.98);
 }
