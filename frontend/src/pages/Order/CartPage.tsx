@@ -73,10 +73,6 @@ export const CartPage: React.FC = () => {
                             "Content-Type": "application/json",
                             "Authorization": `Bearer ${token}`,
                         },
-                        body: JSON.stringify({
-                            is_finished: true,
-                            total_price: transaction.total_price
-                        })
                     }
                 );
 
