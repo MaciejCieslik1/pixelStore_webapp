@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { findById } from "../../api/product.ts";
 import type { ProductDetailsData } from "../../types/product.ts";
+import { jwtDecode } from "jwt-decode";
 import "./ProductDetailsPage.css";
+import type {TokenPayload} from "../../types/authentication.ts";
 
 export const ProductDetailsPage: React.FC = () => {
     const { product_id } = useParams<{ product_id: string }>();
@@ -11,8 +13,6 @@ export const ProductDetailsPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [isGalleryOpen, setIsGalleryOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-    const currentUser = localStorage.getItem("username");
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -30,6 +30,18 @@ export const ProductDetailsPage: React.FC = () => {
         };
         fetchProduct();
     }, [product_id]);
+
+    const getUsernameFromToken = (): string | null => {
+        const token = localStorage.getItem("accessToken");
+        if (!token) return null;
+
+        try {
+            const decoded = jwtDecode<TokenPayload>(token);
+            return decoded.username;
+        } catch (err) {
+            return null;
+        }
+    };
 
    const handleAddToCart = async () => {
        if (!product) {
@@ -88,10 +100,7 @@ export const ProductDetailsPage: React.FC = () => {
         }
     };
 
-    const handleLogout = () => {
-        localStorage.clear();
-        navigate("/login");
-    };
+    const selfUsername = getUsernameFromToken();
 
     if (loading) return <div className="loader">Loading product...</div>;
     if (!product) return <div className="error-msg">Product not found.</div>;
@@ -103,8 +112,14 @@ export const ProductDetailsPage: React.FC = () => {
         <div className="details-wrapper">
             <header className="top-navbar">
                 <div className="logo" onClick={() => navigate("/")}>PixelStore</div>
+
                 <div className="nav-actions">
-                    <button className="logout-button" onClick={handleLogout}>Logout</button>
+                    <button className="nav-btn cart-btn" onClick={() => navigate("/transaction/find_all_mine")}>
+                        🛒 Cart
+                    </button>
+                    <button className="nav-btn profile-btn" onClick={() => navigate(`/user/find_by_username/${selfUsername}`)}>
+                        👤 My Profile
+                    </button>
                 </div>
             </header>
 
@@ -152,7 +167,7 @@ export const ProductDetailsPage: React.FC = () => {
                                 Add to Cart
                             </button>
 
-                            {currentUser === product.owner_username && (
+                            {selfUsername === product.owner_username && (
                                 <button className="edit-product-btn" onClick={() =>
                                     navigate(`/product/update/${product.product_id}`)}>
                                     Edit Product

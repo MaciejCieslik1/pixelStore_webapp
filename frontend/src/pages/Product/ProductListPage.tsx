@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import "./ProductListPage.css";
 import type {ProductFromListData, ProductImage} from "../../types/product.ts";
 import { findAll, type ProductFilters } from "../../api/product.ts";
+import {jwtDecode} from "jwt-decode";
+import type {TokenPayload} from "../../types/authentication.ts";
 
 export const ProductListPage: React.FC = () => {
     const navigate = useNavigate();
@@ -46,25 +48,53 @@ export const ProductListPage: React.FC = () => {
 
     }, [searchTerm, sortBy, order, minPrice, maxPrice, status]);
 
-    const handleLogout = () => {
-        localStorage.clear();
-        navigate("/login");
+    const getUsernameFromToken = (): string | null => {
+        const token = localStorage.getItem("accessToken");
+        if (!token) return null;
+
+        try {
+            const decoded = jwtDecode<TokenPayload>(token);
+            return decoded.username;
+        } catch (err) {
+            return null;
+        }
     };
+
+    const selfUsername = getUsernameFromToken();
 
     return (
         <div className="dashboard-wrapper">
             <header className="top-navbar">
                 <div className="logo" onClick={() => navigate("/")}>PixelStore</div>
+
                 <div className="search-container">
                     <input
                         type="text"
                         placeholder="Search for products..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' &&
+                            navigate(`/search?q=${searchTerm}`)}
                     />
                 </div>
+
                 <div className="nav-actions">
-                    <button className="logout-button" onClick={handleLogout}>Logout</button>
+                    <button className="nav-btn cart-btn" onClick={() => navigate("/transaction/find_all_mine")}>
+                        🛒 Cart
+                    </button>
+
+                    <button
+                        className="nav-btn profile-btn"
+                        onClick={() => {
+                            if (selfUsername) {
+                                navigate(`/user/find_by_username/${selfUsername}`);
+                            } else {
+                                navigate("/login");
+                            }
+                        }}
+                    >
+                        👤 My Profile
+                    </button>
                 </div>
             </header>
 
@@ -147,10 +177,6 @@ export const ProductListPage: React.FC = () => {
                                         </div>
                                         <h4>{product.name}</h4>
                                         <p className="product-price">{product.price} PLN</p>
-                                        <button className="add-button" onClick={(e) =>
-                                            e.stopPropagation()}>
-                                            Add to cart
-                                        </button>
                                     </div>
                                 );
                             }) : <p>No products found.</p>}
