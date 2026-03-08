@@ -38,6 +38,7 @@ class TokenGenerator:
         now = timezone.now()
         access_payload = {
             'user_id': user.user_id,
+            'username': user.username,
             'token_type': 'access',
             'jti': str(uuid.uuid4()),
             'exp': now + timedelta(minutes=15),
