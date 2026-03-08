@@ -35,6 +35,68 @@ export const SelfUserProfilePage: React.FC = () => {
         fetchUserData();
     }, [username]);
 
+    const handleTopUp = async () => {
+        const amount = prompt("Enter amount to add (PLN):");
+        const parsedAmount = parseFloat(amount || "0");
+
+        if (!parsedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+            alert("Please enter a valid amount.");
+            return;
+        }
+
+        try {
+            if (user?.money) {
+                const response = await fetch('/user/update', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bio: user?.bio,
+                        money: user?.money + parsedAmount
+                    }),
+                });
+
+                if (response.ok) {
+                    alert(`Successfully added $${amount}!`);
+                    window.location.reload();
+                }
+                else {
+                    alert("Failed to update balance.");
+                }
+            }
+            else {
+                alert("Failed to update balance.");
+            }
+        } catch (error) {
+            console.error("Error updating balance:", error);
+        }
+    };
+
+    const handleNewBio = async () => {
+        const bio = prompt("Enter new bio:");
+        if (bio === null) return;
+
+        try {
+            const response = await fetch('/user/update', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    bio: bio,
+                    money: user?.money
+                }),
+            });
+
+            if (response.ok) {
+                alert(`Successfully changed bio!`);
+                window.location.reload();
+            } else {
+                alert("Failed to update bio. Server returned an error.");
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            alert("Connection error. Could not update bio.");
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
@@ -57,6 +119,12 @@ export const SelfUserProfilePage: React.FC = () => {
                 </div>
 
                 <div className="button-grid">
+                    <button onClick={handleNewBio} className="btn-topup">
+                        Change bio
+                    </button>
+                    <button onClick={handleTopUp} className="btn-topup">
+                        Top Up Balance
+                    </button>
                     <button
                         onClick={() => navigate(`/user_preferences/find_by_username/${username}`)}
                         className="btn-secondary"
