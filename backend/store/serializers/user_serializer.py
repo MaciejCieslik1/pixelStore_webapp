@@ -29,15 +29,13 @@ class UpdateUserSerializer:
         if raw_value is None:
             self._errors["money"] = "Money cannot be empty."
             return False
-        if isinstance(raw_value, str):
-            raw_value = raw_value.replace(",", ".")
         try:
             price = Decimal(str(raw_value))
-        except InvalidOperation:
+        except (InvalidOperation, ValueError):
             self._errors["money"] = "Money must be a valid decimal number."
             return False
 
-        if price < Decimal("0.01") or price > Decimal("999999.99"):
+        if price < Decimal("0") or price > Decimal("999999.99"):
             self._errors["money"] = "Money must be between 0.01 and 999999.99."
             return False
 
@@ -49,9 +47,9 @@ class UpdateUserSerializer:
         if bio is None:
             self.validated_data["bio"] = ""
             return True
-        elif not isinstance(bio, str):
+        if not isinstance(bio, str):
             self.errors["bio"] = "Bio must be string."
-        else:
-            self.validated_data["bio"] = bio
-            return True
-        return False
+            return False
+
+        self.validated_data["bio"] = bio
+        return True
