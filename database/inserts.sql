@@ -2,6 +2,9 @@ INSERT INTO user (email, username, password, is_verified, bio, money) VALUES
     ('salesman1@gmail.com', 'exemplary_salesman1', '123456789', 1,
      'I am an exemplary salesman', 1000000);
 
+INSERT INTO user_statistics (user_id, creation_date, products_bought, products_sold) VALUES
+    (1, "2026-01-01", 0, 0);
+
 
 INSERT INTO product (owner_id, name, description, price, amount, color, weight, length, width, height, guarantee_period, status) VALUES
     (1, 'intel core I7 14700K', 'powerful gaming cpu', 1500, 3, 'silver', 0.05, 5, 8,
