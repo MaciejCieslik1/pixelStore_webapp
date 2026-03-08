@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./ProductListPage.css";
 import type {ProductFromListData, ProductImage} from "../../types/product.ts";
 import { findAll, type ProductFilters } from "../../api/product.ts";
-import {jwtDecode} from "jwt-decode";
-import type {TokenPayload} from "../../types/authentication.ts";
+import {getUsernameFromToken} from "../../utils/authentication.ts"
 
 export const ProductListPage: React.FC = () => {
     const navigate = useNavigate();
@@ -47,18 +46,6 @@ export const ProductListPage: React.FC = () => {
         return () => clearTimeout(timeoutId);
 
     }, [searchTerm, sortBy, order, minPrice, maxPrice, status]);
-
-    const getUsernameFromToken = (): string | null => {
-        const token = localStorage.getItem("accessToken");
-        if (!token) return null;
-
-        try {
-            const decoded = jwtDecode<TokenPayload>(token);
-            return decoded.username;
-        } catch (err) {
-            return null;
-        }
-    };
 
     const selfUsername = getUsernameFromToken();
 

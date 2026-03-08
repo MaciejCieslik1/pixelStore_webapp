@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import {useParams, useNavigate, Link} from "react-router-dom";
 import { findById } from "../../api/product.ts";
 import type { ProductDetailsData } from "../../types/product.ts";
 import { jwtDecode } from "jwt-decode";
@@ -139,7 +139,9 @@ export const ProductDetailsPage: React.FC = () => {
 
                     <div className="product-info-panel">
                         <div className="info-header">
-                            <span className="seller-tag">Seller: {product.owner_username}</span>
+                            <span className="seller-tag">
+                              Seller: <Link to={`/user/find_by_username/${product.owner_username}`}>{product.owner_username}</Link>
+                            </span>
                             <h1>{product.name}</h1>
                             <p className="status-badge" data-status={product.status}>{product.status}</p>
                         </div>
