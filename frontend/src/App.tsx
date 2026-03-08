@@ -5,7 +5,7 @@ import {LoginPage} from "./pages/Authentication/LoginPage.tsx";
 import {ProductListPage} from "./pages/Product/ProductListPage.tsx";
 import {ProductDetailsPage} from "./pages/Product/ProductDetailsPage.tsx"
 import {CartPage} from "./pages/Order/CartPage.tsx"
-import {SelfUserProfilePage} from "./pages/User/SelfUserProfilePage.tsx"
+import {UserProfilePage} from "./pages/User/UserProfilePage.tsx"
 
 function App() {
   return (
@@ -18,7 +18,7 @@ function App() {
         <Route path="/product/find_all" element={<ProductListPage />} />
         <Route path="/product/find_by_id/:product_id" element={<ProductDetailsPage />} />
         <Route path="/transaction/find_all_mine" element={<CartPage />} />
-        <Route path="/user/find_by_username/:username" element={<SelfUserProfilePage />} />
+        <Route path="/user/find_by_username/:username" element={<UserProfilePage />} />
       </Routes>
     </Router>
   );
